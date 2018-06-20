@@ -4,6 +4,6 @@ namespace ArtificialIntelligence
 {
 	public interface IExecuter
 	{
-		float[][] Execute(FullyConnectedNeuralNetworkModel model, float[] activations);
+		double[][] Execute(FullyConnectedNeuralNetworkModel model, double[] activations);
 	}
 }

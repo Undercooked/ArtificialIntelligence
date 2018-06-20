@@ -4,8 +4,8 @@ namespace ArtificialIntelligence.Models
 {
 	public class FullyConnectedNeuralNetworkModel
 	{
-		public float[][] BiasLayers { get; set; }
-		public float[][,] WeightLayers { get; set; }
+		public double[][] BiasLayers { get; set; }
+		public double[][,] WeightLayers { get; set; }
 		public ActivationFunction ActivationFunction { get; set; }
 	}
 }

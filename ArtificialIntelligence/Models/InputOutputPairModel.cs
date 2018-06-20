@@ -2,7 +2,7 @@
 {
 	public class InputOutputPairModel
 	{
-		public float[] Inputs { get; set; }
-		public float[] Outputs { get; set; }
+		public double[] Inputs { get; set; }
+		public double[] Outputs { get; set; }
 	}
 }

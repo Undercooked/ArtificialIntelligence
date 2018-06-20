@@ -12,10 +12,10 @@ namespace ArtificialIntelligence.Executers
 			this.sigmoidActivationFunction = sigmoidActivationFunction;
 		}
 
-		public float[][] Execute(FullyConnectedNeuralNetworkModel model, float[] activations)
+		public double[][] Execute(FullyConnectedNeuralNetworkModel model, double[] activations)
 		{
 			var layerCount = model.WeightLayers.Length;
-			var allActivations = new float[layerCount + 1][];
+			var allActivations = new double[layerCount + 1][];
 			allActivations[0] = activations;
 
 			for (var layerIndex = 0; layerIndex < layerCount; layerIndex++)
@@ -26,9 +26,9 @@ namespace ArtificialIntelligence.Executers
 			return allActivations;
 		}
 
-		private float[] ExecuteLayer(float[] biases, float[,] weights, float[] activations, ActivationFunction activationFunction)
+		internal double[] ExecuteLayer(double[] biases, double[,] weights, double[] activations, ActivationFunction activationFunction)
 		{
-			var outputs = new float[biases.Length];
+			var outputs = new double[biases.Length];
 
 			for (var outputNeuronIndex = 0; outputNeuronIndex < biases.Length; outputNeuronIndex++)
 			{
@@ -45,7 +45,7 @@ namespace ArtificialIntelligence.Executers
 			return outputs;
 		}
 
-		private float ApplyActivationFunction(float input, ActivationFunction activationFunction)
+		internal double ApplyActivationFunction(double input, ActivationFunction activationFunction)
 		{
 			switch (activationFunction)
 			{

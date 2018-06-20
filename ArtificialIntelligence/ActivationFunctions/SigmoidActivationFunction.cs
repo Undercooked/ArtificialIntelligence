@@ -4,12 +4,12 @@ namespace ArtificialIntelligence.ActivationFunctions
 {
 	public class SigmoidActivationFunction : IActivationFunction
 	{
-		public float Calculate(float input)
+		public double Calculate(double input)
 		{
-			return 1 / (1 + (float)Math.Exp(-input));
+			return 1 / (1 + (double)Math.Exp(-input));
 		}
 
-		public float CalculateDerivative(float input)
+		public double CalculateDerivative(double input)
 		{
 			var sigmoid = Calculate(input);
 

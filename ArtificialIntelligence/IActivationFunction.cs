@@ -2,7 +2,7 @@
 {
 	public interface IActivationFunction
 	{
-		public float Calculate(float input);
-		public float CalculateDerivative(float input);
+		double Calculate(double input);
+		double CalculateDerivative(double input);
 	}
 }
