@@ -68,9 +68,9 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActivationFunctions\SigmoidActivationFunction\CalculateTests.cs" />
+    <Compile Include="ActivationFunctions\SigmoidActivationFunctionTests\CalculateTests.cs" />
+    <Compile Include="ActivationFunctions\SigmoidActivationFunctionTests\CalculateDerivativeTests.cs" />
     <Compile Include="Executers\FullyConnectedNeuralNetworkExecuterTests\ExecuteTests.cs" />
-    <Compile Include="Executers\FullyConnectedNeuralNetworkExecuterTests\ExecuteLayerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

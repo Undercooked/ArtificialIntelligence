@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ArtificialIntelligence.Tests.ActivationFunctions.SigmoidActivationFunction
+namespace ArtificialIntelligence.Tests.ActivationFunctions.SigmoidActivationFunctionTests
 {
 	[TestClass]
-	public class CalculateTests
+	public class CalculateDerivativeTests
 	{
 		[TestMethod]
 		public void TestMethod1()

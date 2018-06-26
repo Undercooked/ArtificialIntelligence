@@ -26,7 +26,7 @@ namespace ArtificialIntelligence.Executers
 			return allActivations;
 		}
 
-		internal double[] ExecuteLayer(double[] biases, double[,] weights, double[] activations, ActivationFunction activationFunction)
+		private double[] ExecuteLayer(double[] biases, double[,] weights, double[] activations, ActivationFunction activationFunction)
 		{
 			var outputs = new double[biases.Length];
 
@@ -45,7 +45,7 @@ namespace ArtificialIntelligence.Executers
 			return outputs;
 		}
 
-		internal double ApplyActivationFunction(double input, ActivationFunction activationFunction)
+		private double ApplyActivationFunction(double input, ActivationFunction activationFunction)
 		{
 			switch (activationFunction)
 			{
