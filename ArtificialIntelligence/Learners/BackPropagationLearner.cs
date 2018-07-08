@@ -30,7 +30,7 @@ namespace ArtificialIntelligence.Learners
 				var deltaOutputActivations = allActivations.Last().Select((output, index) => DerivativeCost(output, inputOutputPair.Outputs[index])).ToArray();
 				var inputActivationLayers = allActivations.Take(allActivations.Length - 1).ToArray();
 
-				BackPropagate(inputActivationLayers, model, deltaOutputActivations);
+				PropagateBackwards(inputActivationLayers, model, deltaOutputActivations);
 			});
 
 			return ApplyLayerDeltas(model, batch);
@@ -41,24 +41,28 @@ namespace ArtificialIntelligence.Learners
 			return 2 * (activation - desiredValue);
 		}
 
-		private void BackPropagate(double[][] inputActivationLayers, FullyConnectedNeuralNetworkModel model, double[] deltaOutputActivations)
+		private void PropagateBackwards(double[][] inputActivationLayers, FullyConnectedNeuralNetworkModel model, double[] deltaOutputActivations)
 		{
 			for (var layerIndex = inputActivationLayers.Length - 1; layerIndex >= 0; layerIndex--)
 			{
-				var inputActivations = inputActivationLayers[layerIndex];
-				var outputActivationCount = deltaOutputActivations.Length;
-				var sigmoidDerivatives = new double[outputActivationCount];
-
-				for (var j = 0; j < outputActivationCount; j++)
-				{
-					sigmoidDerivatives[j] = Activation(inputActivations, model.WeightLayers[layerIndex], model.BiasLayers[layerIndex][j], model.ActivationFunction, j);
-				}
-
-				DeltaWeights(layerIndex, inputActivations, sigmoidDerivatives, deltaOutputActivations);
-				DeltaBiases(layerIndex, sigmoidDerivatives, deltaOutputActivations);
-
-				deltaOutputActivations = DeltaActivations(model.WeightLayers[layerIndex], sigmoidDerivatives, deltaOutputActivations);
+				PropagateLayerBackwards(layerIndex, inputActivationLayers[layerIndex], model, deltaOutputActivations);
 			}
+		}
+
+		private void PropagateLayerBackwards(int layerIndex, double[] inputActivations, FullyConnectedNeuralNetworkModel model, double[] deltaOutputActivations)
+		{
+			var outputActivationCount = deltaOutputActivations.Length;
+			var sigmoidDerivatives = new double[outputActivationCount];
+
+			for (var j = 0; j < outputActivationCount; j++)
+			{
+				sigmoidDerivatives[j] = Activation(inputActivations, model.WeightLayers[layerIndex], model.BiasLayers[layerIndex][j], model.ActivationFunction, j);
+			}
+
+			DeltaWeights(layerIndex, inputActivations, sigmoidDerivatives, deltaOutputActivations);
+			DeltaBiases(layerIndex, sigmoidDerivatives, deltaOutputActivations);
+
+			deltaOutputActivations = DeltaActivations(model.WeightLayers[layerIndex], sigmoidDerivatives, deltaOutputActivations);
 		}
 
 		private FullyConnectedNeuralNetworkModel ApplyLayerDeltas(FullyConnectedNeuralNetworkModel model, InputOutputPairModel[] batch)
@@ -72,9 +76,15 @@ namespace ArtificialIntelligence.Learners
 
 			for (var layerIndex = 0; layerIndex < model.WeightLayers.Length; layerIndex++)
 			{
-				for (var o = 0; o < model.WeightLayers[layerIndex].GetLength(1); o++)
+				var inputActivationCount = model.WeightLayers[layerIndex].GetLength(0);
+				var outputActivationCount = model.WeightLayers[layerIndex].GetLength(1);
+
+				newModel.WeightLayers[layerIndex] = new double[inputActivationCount, outputActivationCount];
+				newModel.BiasLayers[layerIndex] = new double[outputActivationCount];
+
+				for (var o = 0; o < outputActivationCount; o++)
 				{
-					for (var i = 0; i < model.WeightLayers.GetLength(0); i++)
+					for (var i = 0; i < inputActivationCount; i++)
 					{
 						var weightLayerDeltaAverage = layerWeightDeltaTotals[layerIndex][i, o] / batch.Length;
 						newModel.WeightLayers[layerIndex][i, o] = model.WeightLayers[layerIndex][i, o] - weightLayerDeltaAverage;

@@ -71,6 +71,7 @@
     <Compile Include="ActivationFunctions\SigmoidActivationFunctionTests\CalculateTests.cs" />
     <Compile Include="ActivationFunctions\SigmoidActivationFunctionTests\CalculateDerivativeTests.cs" />
     <Compile Include="Executers\FullyConnectedNeuralNetworkExecuterTests\ExecuteTests.cs" />
+    <Compile Include="Learners\BackPropagationLearnerTests\LearnTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
