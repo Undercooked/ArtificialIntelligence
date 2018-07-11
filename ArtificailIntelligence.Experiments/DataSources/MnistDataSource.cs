@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ArtificialIntelligence;
+using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
 
-namespace ArtificialIntelligence.IntegrationTests
+namespace ArtificailIntelligence.Experiments
 {
-	internal class MnistDataRepository
+	internal class MnistDataSource : IDataSource
 	{
 		private const string mnistDataFolder = @"..\..\..\MNIST";
 		private const string trainingDataPrefix = "training";
 		private const string testDataPrefix = "test";
 
-		public IEnumerable<InputOutputPairModel> GetMnistData(bool isTraining)
+		public IEnumerable<InputOutputPairModel> GetData(DataPurpose dataPurpose)
 		{
-			var prefix = isTraining ? trainingDataPrefix : testDataPrefix;
+			var prefix = GetPrefix(dataPurpose);
 			var imageData = ReadImageData($@"{mnistDataFolder}\{prefix}-images.dat");
 			var labelData = ReadLabelData($@"{mnistDataFolder}\{prefix}-labels.dat");
 
@@ -25,6 +27,19 @@ namespace ArtificialIntelligence.IntegrationTests
 					Inputs = imageData[i].Select(NormalizeImageActivation).ToArray(),
 					Outputs = NormalizeLabelActivation(labelData[i])
 				};
+			}
+		}
+
+		private string GetPrefix(DataPurpose dataPurpose)
+		{
+			switch (dataPurpose)
+			{
+				case DataPurpose.Test:
+					return testDataPrefix;
+				case DataPurpose.Training:
+					return trainingDataPrefix;
+				default:
+					return null;
 			}
 		}
 

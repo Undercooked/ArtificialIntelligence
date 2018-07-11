@@ -2,27 +2,30 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using ArtificialIntelligence;
 using ArtificialIntelligence.ActivationFunctions;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Executers;
 using ArtificialIntelligence.Initializers;
 using ArtificialIntelligence.Learners;
 using ArtificialIntelligence.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ArtificialIntelligence.IntegrationTests
+namespace ArtificailIntelligence.Experiments
 {
-	[TestClass]
-	public class NeuralNetworkWithBackPropagation
+	public class NeuralNetworkWithBackPropagation : IExperiment
 	{
+		private const int iterations = 10;
+		private const int batchSize = 100;
+		private const ActivationFunction activationFunction = ActivationFunction.Sigmoid;
+		private static readonly int[] activationCountsPerLayer = new[] { 784, 200, 10 };
+
 		private FullyConnectedNeuralNetworkExecuter executer;
 		private BackPropagationLearner learner;
 		private IModelInitializer modelInitializer;
 		private Random random;
-		private MnistDataRepository mnistDataRepository;
+		private MnistDataSource mnistDataSource;
 
-		[TestInitialize]
-		public void TestInitialize()
+		public NeuralNetworkWithBackPropagation()
 		{
 			var sigmoidActivationFunction = new SigmoidActivationFunction();
 
@@ -30,32 +33,27 @@ namespace ArtificialIntelligence.IntegrationTests
 			learner = new BackPropagationLearner(executer, sigmoidActivationFunction);
 			modelInitializer = new FullyConnectedNeuralNetworkInitializer();
 			random = new Random();
-			mnistDataRepository = new MnistDataRepository();
+			mnistDataSource = new MnistDataSource();
 		}
 
-		[TestMethod]
-		public void LearningForNeuralNetworkWithSigmoidFor10IterationsUsingMinibatchesOfSize100()
+		public void Run()
 		{
-			var iterations = 10;
-			var batchSize = 100;
-			var activationFunction = ActivationFunction.Sigmoid;
-			var activationCountsPerLayer = new[] { 784, 200, 10 };
 			var model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
-			var trainingInputOutputPairs = mnistDataRepository.GetMnistData(true);
-			var testInputOutputPairs = mnistDataRepository.GetMnistData(false);
+			var trainingInputOutputPairs = mnistDataSource.GetData(DataPurpose.Training);
+			var testInputOutputPairs = mnistDataSource.GetData(DataPurpose.Test);
 
 			for (var i = 0; i < iterations; i++)
 			{
 				var score = ScoreModel(model, testInputOutputPairs);
 
-				Debug.WriteLine($"{nameof(LearningForNeuralNetworkWithSigmoidFor10IterationsUsingMinibatchesOfSize100)} iteration {i}: {score}");
+				Console.WriteLine($"{nameof(NeuralNetworkWithBackPropagation)} iteration {i}: {score}");
 
 				model = TrainModel(batchSize, model, trainingInputOutputPairs);
 			}
 
 			var finalScore = ScoreModel(model, testInputOutputPairs);
 
-			Debug.WriteLine($"{nameof(LearningForNeuralNetworkWithSigmoidFor10IterationsUsingMinibatchesOfSize100)} iteration {iterations}: {finalScore}");
+			Console.WriteLine($"{nameof(NeuralNetworkWithBackPropagation)} iteration {iterations}: {finalScore}");
 		}
 
 		private FullyConnectedNeuralNetworkModel TrainModel(int batchSize, FullyConnectedNeuralNetworkModel model, IEnumerable<InputOutputPairModel> trainingInputOutputPairs)
