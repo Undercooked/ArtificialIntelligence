@@ -6,7 +6,7 @@ namespace ArtificailIntelligence.Experiments
 	{
 		public override void Load()
 		{
-			Bind<IExperiment>().To<NeuralNetworkWithBackPropagation>();
+			Bind<IExperiment>().To<NeuralNetworkWithBackPropagationExperiment>();
 		}
 	}
 }

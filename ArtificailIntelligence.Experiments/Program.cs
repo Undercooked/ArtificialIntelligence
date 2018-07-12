@@ -1,9 +1,12 @@
 ﻿using Ninject;
+using NLog;
 
 namespace ArtificailIntelligence.Experiments
 {
 	public class Program
 	{
+		private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
 		static void Main(string[] args)
 		{
 			var kernel = new StandardKernel(new Module());
@@ -11,7 +14,20 @@ namespace ArtificailIntelligence.Experiments
 
 			foreach(var experiment in experiments)
 			{
-				experiment.Run();
+				experiment.Initialize();
+
+				for (var i = 0; i < experiment.Iterations; i++)
+				{
+					var score = experiment.GetModelScore();
+
+					logger.Info($"{experiment.Title} iteration {i}: {score}");
+
+					experiment.TrainModel();
+				}
+
+				var finalScore = experiment.GetModelScore();
+
+				logger.Info($"{experiment.Title} iteration {experiment.Iterations}: {finalScore}");
 			}
 		}
 	}

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ArtificialIntelligence;
 using ArtificialIntelligence.ActivationFunctions;
 using ArtificialIntelligence.Enums;
@@ -12,7 +13,7 @@ using ArtificialIntelligence.Models;
 
 namespace ArtificailIntelligence.Experiments
 {
-	public class NeuralNetworkWithBackPropagation : IExperiment
+	public class NeuralNetworkWithBackPropagationExperiment : IExperiment
 	{
 		private const int iterations = 10;
 		private const int batchSize = 100;
@@ -24,8 +25,14 @@ namespace ArtificailIntelligence.Experiments
 		private IModelInitializer modelInitializer;
 		private Random random;
 		private MnistDataSource mnistDataSource;
+		private FullyConnectedNeuralNetworkModel model;
+		private IEnumerable<InputOutputPairModel> trainingInputOutputPairs;
+		private IEnumerable<InputOutputPairModel> testInputOutputPairs;
 
-		public NeuralNetworkWithBackPropagation()
+		public string Title => nameof(NeuralNetworkWithBackPropagationExperiment);
+		public int Iterations => iterations;
+
+		public NeuralNetworkWithBackPropagationExperiment()
 		{
 			var sigmoidActivationFunction = new SigmoidActivationFunction();
 
@@ -36,27 +43,14 @@ namespace ArtificailIntelligence.Experiments
 			mnistDataSource = new MnistDataSource();
 		}
 
-		public void Run()
+		public void Initialize()
 		{
-			var model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
-			var trainingInputOutputPairs = mnistDataSource.GetData(DataPurpose.Training);
-			var testInputOutputPairs = mnistDataSource.GetData(DataPurpose.Test);
-
-			for (var i = 0; i < iterations; i++)
-			{
-				var score = ScoreModel(model, testInputOutputPairs);
-
-				Console.WriteLine($"{nameof(NeuralNetworkWithBackPropagation)} iteration {i}: {score}");
-
-				model = TrainModel(batchSize, model, trainingInputOutputPairs);
-			}
-
-			var finalScore = ScoreModel(model, testInputOutputPairs);
-
-			Console.WriteLine($"{nameof(NeuralNetworkWithBackPropagation)} iteration {iterations}: {finalScore}");
+			model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
+			trainingInputOutputPairs = mnistDataSource.GetData(DataPurpose.Training);
+			testInputOutputPairs = mnistDataSource.GetData(DataPurpose.Test);
 		}
 
-		private FullyConnectedNeuralNetworkModel TrainModel(int batchSize, FullyConnectedNeuralNetworkModel model, IEnumerable<InputOutputPairModel> trainingInputOutputPairs)
+		public void TrainModel()
 		{
 			var miniBatches = CreateMiniBatches(trainingInputOutputPairs, batchSize);
 
@@ -64,16 +58,14 @@ namespace ArtificailIntelligence.Experiments
 			{
 				model = learner.Learn(model, batch);
 			}
-
-			return model;
 		}
 
-		private double ScoreModel(FullyConnectedNeuralNetworkModel model, IEnumerable<InputOutputPairModel> testInputOutputPairs)
+		public double GetModelScore()
 		{
 			var correct = 0;
 			var incorrect = 0;
 
-			foreach (var pair in testInputOutputPairs)
+			Parallel.ForEach(testInputOutputPairs, pair =>
 			{
 				var outputs = executer.Execute(model, pair.Inputs).Last();
 				var outputLabel = Array.IndexOf(outputs, outputs.Max());
@@ -81,13 +73,13 @@ namespace ArtificailIntelligence.Experiments
 
 				if (outputLabel == expectedLabel)
 				{
-					correct++;
+					Interlocked.Increment(ref correct);
 				}
 				else
 				{
-					incorrect++;
+					Interlocked.Increment(ref incorrect);
 				}
-			}
+			});
 
 			return (double)correct / (correct + incorrect);
 		}

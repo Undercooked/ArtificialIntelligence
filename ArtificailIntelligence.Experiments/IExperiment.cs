@@ -2,6 +2,11 @@
 {
 	internal interface IExperiment
 	{
-		void Run();
+		string Title { get; }
+		int Iterations { get; }
+
+		void Initialize();
+		void TrainModel();
+		double GetModelScore();
 	}
 }
