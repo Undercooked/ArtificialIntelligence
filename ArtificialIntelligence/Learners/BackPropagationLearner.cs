@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using ArtificialIntelligence.ActivationFunctions;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
+using Ninject;
 
 namespace ArtificialIntelligence.Learners
 {
@@ -13,7 +15,7 @@ namespace ArtificialIntelligence.Learners
 		private double[][,] layerWeightDeltaTotals;
 		private double[][] layerBiasDeltaTotals;
 
-		public BackPropagationLearner(IExecuter executer, IActivationFunction sigmoidActivationFunction)
+		public BackPropagationLearner(IExecuter executer, [Named(nameof(SigmoidActivationFunction))] IActivationFunction sigmoidActivationFunction)
 		{
 			this.executer = executer;
 			this.sigmoidActivationFunction = sigmoidActivationFunction;

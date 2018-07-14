@@ -1,5 +1,7 @@
-﻿using ArtificialIntelligence.Enums;
+﻿using ArtificialIntelligence.ActivationFunctions;
+using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
+using Ninject;
 
 namespace ArtificialIntelligence.Executers
 {
@@ -7,7 +9,7 @@ namespace ArtificialIntelligence.Executers
 	{
 		private readonly IActivationFunction sigmoidActivationFunction;
 
-		public FullyConnectedNeuralNetworkExecuter(IActivationFunction sigmoidActivationFunction)
+		public FullyConnectedNeuralNetworkExecuter([Named(nameof(SigmoidActivationFunction))] IActivationFunction sigmoidActivationFunction)
 		{
 			this.sigmoidActivationFunction = sigmoidActivationFunction;
 		}

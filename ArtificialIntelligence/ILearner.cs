@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using ArtificialIntelligence.Models;
 
 namespace ArtificialIntelligence
 {
-    public interface ILearner
+	public interface ILearner
     {
-    }
+		FullyConnectedNeuralNetworkModel Learn(FullyConnectedNeuralNetworkModel model, InputOutputPairModel[] batch);
+	}
 }

@@ -4,50 +4,59 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArtificialIntelligence;
-using ArtificialIntelligence.ActivationFunctions;
 using ArtificialIntelligence.Enums;
-using ArtificialIntelligence.Executers;
-using ArtificialIntelligence.Initializers;
-using ArtificialIntelligence.Learners;
 using ArtificialIntelligence.Models;
 
 namespace ArtificailIntelligence.Experiments
 {
 	public class NeuralNetworkWithBackPropagationExperiment : IExperiment
 	{
-		private const int iterations = 10;
-		private const int batchSize = 100;
-		private const ActivationFunction activationFunction = ActivationFunction.Sigmoid;
-		private static readonly int[] activationCountsPerLayer = new[] { 784, 200, 10 };
+		private readonly int batchSize;
+		private readonly ActivationFunction activationFunction;
+		private readonly int[] activationCountsPerLayer;
+		private readonly IExecuter executer;
+		private readonly ILearner learner;
+		private readonly IModelInitializer modelInitializer;
+		private readonly Random random;
+		private readonly IDataSource dataSource;
 
-		private FullyConnectedNeuralNetworkExecuter executer;
-		private BackPropagationLearner learner;
-		private IModelInitializer modelInitializer;
-		private Random random;
-		private MnistDataSource mnistDataSource;
 		private FullyConnectedNeuralNetworkModel model;
 		private IEnumerable<InputOutputPairModel> trainingInputOutputPairs;
 		private IEnumerable<InputOutputPairModel> testInputOutputPairs;
 
-		public string Title => nameof(NeuralNetworkWithBackPropagationExperiment);
-		public int Iterations => iterations;
+		public string Title { get; }
+		public int Iterations { get; }
 
-		public NeuralNetworkWithBackPropagationExperiment()
+		public NeuralNetworkWithBackPropagationExperiment(
+			string title,
+			int iterations,
+			int batchSize,
+			ActivationFunction activationFunction,
+			int[] activationCountsPerLayer,
+			IExecuter executer,
+			ILearner learner,
+			IModelInitializer modelInitializer,
+			IDataSource dataSource,
+			Random random)
 		{
-			var sigmoidActivationFunction = new SigmoidActivationFunction();
+			Title = title;
+			Iterations = iterations;
 
-			executer = new FullyConnectedNeuralNetworkExecuter(sigmoidActivationFunction);
-			learner = new BackPropagationLearner(executer, sigmoidActivationFunction);
-			modelInitializer = new FullyConnectedNeuralNetworkInitializer();
-			random = new Random();
-			mnistDataSource = new MnistDataSource();
+			this.batchSize = batchSize;
+			this.activationFunction = activationFunction;
+			this.activationCountsPerLayer = activationCountsPerLayer;
+			this.executer = executer;
+			this.learner = learner;
+			this.modelInitializer = modelInitializer;
+			this.dataSource = dataSource;
+			this.random = random;
 		}
 
 		public void Initialize()
 		{
 			model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
-			trainingInputOutputPairs = mnistDataSource.GetData(DataPurpose.Training);
-			testInputOutputPairs = mnistDataSource.GetData(DataPurpose.Test);
+			trainingInputOutputPairs = dataSource.GetData(DataPurpose.Training);
+			testInputOutputPairs = dataSource.GetData(DataPurpose.Test);
 		}
 
 		public void TrainModel()

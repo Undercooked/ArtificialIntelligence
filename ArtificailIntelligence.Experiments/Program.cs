@@ -1,4 +1,5 @@
-﻿using Ninject;
+﻿using System;
+using Ninject;
 using NLog;
 
 namespace ArtificailIntelligence.Experiments
@@ -9,6 +10,9 @@ namespace ArtificailIntelligence.Experiments
 
 		static void Main(string[] args)
 		{
+			Console.SetWindowSize(256, 64);
+			Console.SetWindowPosition(Console.WindowWidth / 2 - 128, Console.WindowHeight / 2 - 32);
+
 			var kernel = new StandardKernel(new Module());
 			var experiments = kernel.GetAll<IExperiment>();
 
@@ -20,14 +24,14 @@ namespace ArtificailIntelligence.Experiments
 				{
 					var score = experiment.GetModelScore();
 
-					logger.Info($"{experiment.Title} iteration {i}: {score}");
+					logger.Info($"{experiment.Title} - iteration {i}: {score}");
 
 					experiment.TrainModel();
 				}
 
 				var finalScore = experiment.GetModelScore();
 
-				logger.Info($"{experiment.Title} iteration {experiment.Iterations}: {finalScore}");
+				logger.Info($"{experiment.Title} - iteration {experiment.Iterations}: {finalScore}");
 			}
 		}
 	}
