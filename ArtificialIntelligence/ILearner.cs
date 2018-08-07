@@ -3,7 +3,10 @@
 namespace ArtificialIntelligence
 {
 	public interface ILearner
-    {
-		FullyConnectedNeuralNetworkModel Learn(FullyConnectedNeuralNetworkModel model, InputOutputPairModel[] batch);
+	{
+		FullyConnectedNeuralNetworkModel Model { get; }
+
+		void Initialize(FullyConnectedNeuralNetworkModel model);
+		void Learn(InputOutputPairModel[] batch);
 	}
 }

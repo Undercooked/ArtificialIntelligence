@@ -72,7 +72,10 @@
     <Compile Include="ActivationFunctions\SigmoidActivationFunctionTests\CalculateDerivativeTests.cs" />
     <Compile Include="Executers\FullyConnectedNeuralNetworkExecuterTests\ExecuteTests.cs" />
     <Compile Include="Initializers\FullyConnectedNeuralNetworkInitializerTests\CreateModelTests.cs" />
+    <Compile Include="Learners\BackPropagationLearnerTests\InitializeTests.cs" />
     <Compile Include="Learners\BackPropagationLearnerTests\LearnTests.cs" />
+    <Compile Include="Learners\GeneticLearnerTests\LearnTests.cs" />
+    <Compile Include="Learners\GeneticLearnerTests\InitalizeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

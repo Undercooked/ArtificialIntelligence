@@ -56,12 +56,14 @@ namespace ArtificialIntelligence.Tests.Learners.BackPropagationLearnerTests
 			mockSigmoidActivationFunction.Setup(m => m.CalculateDerivative(It.IsAny<double>()))
 				.Returns<double>(arg1 => 0.5 * arg1);
 
+			sut.Initialize(model);
+
 			// Act
-			var result = sut.Learn(model, inputOutputBatches);
+			sut.Learn(inputOutputBatches);
 
 			// Assert
-			result.Should().NotBeNull();
-			result.Should().BeEquivalentTo(expectedResult);
+			sut.Model.Should().NotBeNull();
+			sut.Model.Should().BeEquivalentTo(expectedResult);
 		}
 
 		[TestMethod]
@@ -95,12 +97,14 @@ namespace ArtificialIntelligence.Tests.Learners.BackPropagationLearnerTests
 			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(inputOutputBatches[1].Inputs))))
 				.Returns<FullyConnectedNeuralNetworkModel, double[]>((arg1, arg2) => new double[][] { arg2, new[] { 0.51112549346515468, 0.53561880887592039, 0.61608786703901575 } });
 
+			sut.Initialize(model);
+
 			// Act
-			var result = sut.Learn(model, inputOutputBatches);
+			sut.Learn(inputOutputBatches);
 
 			// Assert
-			result.Should().NotBeNull();
-			result.Should().BeEquivalentTo(expectedResult);
+			sut.Model.Should().NotBeNull();
+			sut.Model.Should().BeEquivalentTo(expectedResult);
 		}
 
 		private FullyConnectedNeuralNetworkModel CreateFullyConnectedNeuralNetworkModel(ActivationFunction activationFunction)

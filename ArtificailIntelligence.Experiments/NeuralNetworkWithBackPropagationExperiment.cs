@@ -20,7 +20,6 @@ namespace ArtificailIntelligence.Experiments
 		private readonly Random random;
 		private readonly IDataSource dataSource;
 
-		private FullyConnectedNeuralNetworkModel model;
 		private IEnumerable<InputOutputPairModel> trainingInputOutputPairs;
 		private IEnumerable<InputOutputPairModel> testInputOutputPairs;
 
@@ -54,9 +53,12 @@ namespace ArtificailIntelligence.Experiments
 
 		public void Initialize()
 		{
-			model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
+			var model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
+
 			trainingInputOutputPairs = dataSource.GetData(DataPurpose.Training);
 			testInputOutputPairs = dataSource.GetData(DataPurpose.Test);
+
+			learner.Initialize(model);
 		}
 
 		public void TrainModel()
@@ -65,7 +67,7 @@ namespace ArtificailIntelligence.Experiments
 
 			foreach (var batch in miniBatches)
 			{
-				model = learner.Learn(model, batch);
+				learner.Learn(batch);
 			}
 		}
 
@@ -76,7 +78,7 @@ namespace ArtificailIntelligence.Experiments
 
 			Parallel.ForEach(testInputOutputPairs, pair =>
 			{
-				var outputs = executer.Execute(model, pair.Inputs).Last();
+				var outputs = executer.Execute(learner.Model, pair.Inputs).Last();
 				var outputLabel = Array.IndexOf(outputs, outputs.Max());
 				var expectedLabel = Array.IndexOf(pair.Outputs, pair.Outputs.Max());
 

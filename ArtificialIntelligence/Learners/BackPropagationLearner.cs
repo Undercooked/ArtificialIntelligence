@@ -15,27 +15,34 @@ namespace ArtificialIntelligence.Learners
 		private double[][,] layerWeightDeltaTotals;
 		private double[][] layerBiasDeltaTotals;
 
+		public FullyConnectedNeuralNetworkModel Model { get; private set; }
+
 		public BackPropagationLearner(IExecuter executer, [Named(nameof(SigmoidActivationFunction))] IActivationFunction sigmoidActivationFunction)
 		{
 			this.executer = executer;
 			this.sigmoidActivationFunction = sigmoidActivationFunction;
 		}
 
-		public FullyConnectedNeuralNetworkModel Learn(FullyConnectedNeuralNetworkModel model, InputOutputPairModel[] batch)
+		public void Initialize(FullyConnectedNeuralNetworkModel model)
 		{
-			layerWeightDeltaTotals = new double[model.WeightLayers.Length][,];
-			layerBiasDeltaTotals = new double[model.BiasLayers.Length][];
+			Model = model;
+		}
+
+		public void Learn(InputOutputPairModel[] batch)
+		{
+			layerWeightDeltaTotals = new double[Model.WeightLayers.Length][,];
+			layerBiasDeltaTotals = new double[Model.BiasLayers.Length][];
 
 			Parallel.ForEach(batch, inputOutputPair =>
 			{
-				var allActivations = executer.Execute(model, inputOutputPair.Inputs);
+				var allActivations = executer.Execute(Model, inputOutputPair.Inputs);
 				var deltaOutputActivations = allActivations.Last().Select((output, index) => DerivativeCost(output, inputOutputPair.Outputs[index])).ToArray();
 				var inputActivationLayers = allActivations.Take(allActivations.Length - 1).ToArray();
 
-				PropagateBackwards(inputActivationLayers, model, deltaOutputActivations);
+				PropagateBackwards(inputActivationLayers, Model, deltaOutputActivations);
 			});
 
-			return ApplyLayerDeltas(model, batch);
+			ApplyLayerDeltas(batch);
 		}
 
 		private double DerivativeCost(double activation, double desiredValue)
@@ -67,19 +74,19 @@ namespace ArtificialIntelligence.Learners
 			return DeltaActivations(model.WeightLayers[layerIndex], sigmoidDerivatives, deltaOutputActivations);
 		}
 
-		private FullyConnectedNeuralNetworkModel ApplyLayerDeltas(FullyConnectedNeuralNetworkModel model, InputOutputPairModel[] batch)
+		private void ApplyLayerDeltas(InputOutputPairModel[] batch)
 		{
 			var newModel = new FullyConnectedNeuralNetworkModel
 			{
-				ActivationFunction = model.ActivationFunction,
-				BiasLayers = new double[model.BiasLayers.Length][],
-				WeightLayers = new double[model.WeightLayers.Length][,]
+				ActivationFunction = Model.ActivationFunction,
+				BiasLayers = new double[Model.BiasLayers.Length][],
+				WeightLayers = new double[Model.WeightLayers.Length][,]
 			};
 
-			for (var layerIndex = 0; layerIndex < model.WeightLayers.Length; layerIndex++)
+			for (var layerIndex = 0; layerIndex < Model.WeightLayers.Length; layerIndex++)
 			{
-				var inputActivationCount = model.WeightLayers[layerIndex].GetLength(0);
-				var outputActivationCount = model.WeightLayers[layerIndex].GetLength(1);
+				var inputActivationCount = Model.WeightLayers[layerIndex].GetLength(0);
+				var outputActivationCount = Model.WeightLayers[layerIndex].GetLength(1);
 
 				newModel.WeightLayers[layerIndex] = new double[inputActivationCount, outputActivationCount];
 				newModel.BiasLayers[layerIndex] = new double[outputActivationCount];
@@ -89,15 +96,15 @@ namespace ArtificialIntelligence.Learners
 					for (var i = 0; i < inputActivationCount; i++)
 					{
 						var weightLayerDeltaAverage = layerWeightDeltaTotals[layerIndex][i, o] / batch.Length;
-						newModel.WeightLayers[layerIndex][i, o] = model.WeightLayers[layerIndex][i, o] - weightLayerDeltaAverage;
+						newModel.WeightLayers[layerIndex][i, o] = Model.WeightLayers[layerIndex][i, o] - weightLayerDeltaAverage;
 					}
 
 					var biasLayerDeltaAverage = layerBiasDeltaTotals[layerIndex][o] / batch.Length;
-					newModel.BiasLayers[layerIndex][o] = model.BiasLayers[layerIndex][o] - biasLayerDeltaAverage;
+					newModel.BiasLayers[layerIndex][o] = Model.BiasLayers[layerIndex][o] - biasLayerDeltaAverage;
 				}
 			}
 
-			return newModel;
+			Model = newModel;
 		}
 
 		private double Activation(double[] activations, double[,] weights, double bias, ActivationFunction activationFunction, int outputIndex)
