@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtificialIntelligence", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtificialIntelligence.Tests", "ArtificialIntelligence.Tests\ArtificialIntelligence.Tests.csproj", "{861DDBE1-E497-43AA-8FEB-104806C52248}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtificialIntelligence.IntegrationTests", "ArtificialIntelligence.IntegrationTests\ArtificialIntelligence.IntegrationTests.csproj", "{A0B79AEE-3E22-459A-A981-FC94155D2793}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtificailIntelligence.Experiments", "ArtificailIntelligence.Experiments\ArtificailIntelligence.Experiments.csproj", "{CB5D8719-4541-4264-B5B4-46D631A39421}"
 EndProject
 Global
@@ -25,10 +23,6 @@ Global
 		{861DDBE1-E497-43AA-8FEB-104806C52248}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{861DDBE1-E497-43AA-8FEB-104806C52248}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{861DDBE1-E497-43AA-8FEB-104806C52248}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0B79AEE-3E22-459A-A981-FC94155D2793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0B79AEE-3E22-459A-A981-FC94155D2793}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0B79AEE-3E22-459A-A981-FC94155D2793}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0B79AEE-3E22-459A-A981-FC94155D2793}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CB5D8719-4541-4264-B5B4-46D631A39421}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CB5D8719-4541-4264-B5B4-46D631A39421}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB5D8719-4541-4264-B5B4-46D631A39421}.Release|Any CPU.ActiveCfg = Release|Any CPU
