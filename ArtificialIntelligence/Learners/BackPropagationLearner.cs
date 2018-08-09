@@ -36,7 +36,7 @@ namespace ArtificialIntelligence.Learners
 			Parallel.ForEach(batch, inputOutputPair =>
 			{
 				var allActivations = executer.Execute(Model, inputOutputPair.Inputs);
-				var deltaOutputActivations = allActivations.Last().Select((output, index) => DerivativeCost(output, inputOutputPair.Outputs[index])).ToArray();
+				var deltaOutputActivations = allActivations.Last().Select((output, index) => CalculateDerivativeCost(output, inputOutputPair.Outputs[index])).ToArray();
 				var inputActivationLayers = allActivations.Take(allActivations.Length - 1).ToArray();
 
 				PropagateBackwards(inputActivationLayers, Model, deltaOutputActivations);
@@ -45,7 +45,7 @@ namespace ArtificialIntelligence.Learners
 			ApplyLayerDeltas(batch);
 		}
 
-		private double DerivativeCost(double activation, double desiredValue)
+		private double CalculateDerivativeCost(double activation, double desiredValue)
 		{
 			return 2 * (activation - desiredValue);
 		}

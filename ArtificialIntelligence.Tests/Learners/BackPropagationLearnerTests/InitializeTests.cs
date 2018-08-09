@@ -2,21 +2,18 @@
 using ArtificialIntelligence.Models;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace ArtificialIntelligence.Tests.Learners.BackPropagationLearnerTests
 {
 	[TestClass]
 	public class InitializeTests
 	{
-		private Mock<IExecuter> mockExecuter;
-		private Mock<IActivationFunction> mockSigmoidActivationFunction;
 		private BackPropagationLearner sut;
 
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			sut = new BackPropagationLearner(mockExecuter.Object, mockSigmoidActivationFunction.Object);
+			sut = new BackPropagationLearner(null, null);
 		}
 
 		[TestMethod]
