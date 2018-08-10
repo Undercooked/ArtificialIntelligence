@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArtificialIntelligence.Models;
@@ -7,16 +8,17 @@ namespace ArtificialIntelligence.Learners
 {
 	public class GeneticLearner : ILearner
 	{
+		private const double survivorPecentile = 0.2;
+
 		private readonly int populationSize;
 		private readonly Random random;
 		private readonly IModelInitializer modelInitializer;
 		private readonly IExecuter executer;
 
-		private FullyConnectedNeuralNetworkModel[] population;
-		private double[] populationCosts;
+		private CostModel<FullyConnectedNeuralNetworkModel>[] population;
 		private object populationCostLock = new object();
 
-		public FullyConnectedNeuralNetworkModel Model { get; private set; }
+		public FullyConnectedNeuralNetworkModel Model => population[0].Model;
 
 		public GeneticLearner(int populationSize, Random random, IModelInitializer modelInitializer, IExecuter executer)
 		{
@@ -24,19 +26,19 @@ namespace ArtificialIntelligence.Learners
 			this.random = random;
 			this.modelInitializer = modelInitializer;
 			this.executer = executer;
-			population = new FullyConnectedNeuralNetworkModel[populationSize];
+			population = new CostModel<FullyConnectedNeuralNetworkModel>[populationSize];
 		}
 
 		public void Initialize(FullyConnectedNeuralNetworkModel model)
 		{
-			Model = model;
-			population[0] = model;
+			population[0] = new CostModel<FullyConnectedNeuralNetworkModel>(model);
 
 			var activationCountsPerLayer = GetActivationCountsPerLayer();
 
 			for (var populationIndex = 1; populationIndex < populationSize; populationIndex++)
 			{
-				population[populationIndex] = modelInitializer.CreateModel(model.ActivationFunction, activationCountsPerLayer.ToArray(), random);
+				var member = modelInitializer.CreateModel(model.ActivationFunction, activationCountsPerLayer.ToArray(), random);
+				population[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(member);
 			}
 		}
 
@@ -45,8 +47,8 @@ namespace ArtificialIntelligence.Learners
 			Parallel.ForEach(batch, inputOutputPair =>
 			{
 				CalculateCostForPopulation(inputOutputPair);
+				SortPopulation();
 
-				// TODO: Implement remainder of method
 			});
 		}
 
@@ -60,19 +62,15 @@ namespace ArtificialIntelligence.Learners
 
 		private void CalculateCostForPopulation(InputOutputPairModel inputOutputPair)
 		{
-			populationCosts = new double[populationSize];
-
 			for (var individualIndex = 0; individualIndex < population.Length; individualIndex++)
 			{
-				populationCosts[individualIndex] = 0;
-
 				var model = population[individualIndex];
 				var allActivations = executer.Execute(Model, inputOutputPair.Inputs);
 				var cost = CalculateCost(inputOutputPair.Outputs, allActivations.Last());
 
 				lock (populationCostLock)
 				{
-					populationCosts[individualIndex] += cost;
+					population[individualIndex].Cost += cost;
 				}
 			}
 		}
@@ -90,6 +88,52 @@ namespace ArtificialIntelligence.Learners
 			}
 
 			return totalCost;
+		}
+
+		private void SortPopulation()
+		{
+			Array.Sort(population, (x, y) => x.Cost.CompareTo(y.Cost));
+		}
+
+		private CostModel<FullyConnectedNeuralNetworkModel>[] SelectSurvivors(int iteration)
+		{
+			var selectionSize = (int)Math.Round(populationSize * survivorPecentile);
+			var topSelectionSize = (int)Math.Round(selectionSize * 0.7);
+			var randomSelectionSize = selectionSize - topSelectionSize;
+			var selection = new CostModel<FullyConnectedNeuralNetworkModel>[selectionSize];
+			var uniqueRandomIndexes = CreateUniqueRandomIntegers(topSelectionSize, population.Length, randomSelectionSize);
+
+			for (var populationIndex = 0; populationIndex < topSelectionSize; populationIndex++)
+			{
+				var model = population[populationIndex].Model;
+				selection[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(model);
+			}
+
+			for (var populationIndex = topSelectionSize; populationIndex < selection.Length; populationIndex++)
+			{
+				var selectedMemberIndex = uniqueRandomIndexes[populationIndex - topSelectionSize];
+				var model = population[selectedMemberIndex].Model;
+				selection[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(model);
+			}
+
+			return selection.ToArray();
+		}
+
+		private List<int> CreateUniqueRandomIntegers(int minValue, int maxValue, int count)
+		{
+			var uniqueRandomIntegers = new List<int>();
+
+			while (uniqueRandomIntegers.Count < count)
+			{
+				var randomInt = random.Next(minValue, maxValue);
+
+				if (!uniqueRandomIntegers.Contains(randomInt))
+				{
+					uniqueRandomIntegers.Add(randomInt);
+				}
+			}
+
+			return uniqueRandomIntegers;
 		}
 	}
 }
