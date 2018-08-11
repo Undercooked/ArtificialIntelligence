@@ -5,11 +5,11 @@ using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
 using Ninject;
 
-namespace ArtificialIntelligence.Learners
+namespace ArtificialIntelligence.BackPropagation
 {
 	public class BackPropagationLearner : ILearner
 	{
-		private readonly IExecuter executer;
+		private readonly IModelExecuter executer;
 		private readonly IActivationFunction sigmoidActivationFunction;
 
 		private double[][,] layerWeightDeltaTotals;
@@ -17,7 +17,7 @@ namespace ArtificialIntelligence.Learners
 
 		public FullyConnectedNeuralNetworkModel Model { get; private set; }
 
-		public BackPropagationLearner(IExecuter executer, [Named(nameof(SigmoidActivationFunction))] IActivationFunction sigmoidActivationFunction)
+		public BackPropagationLearner(IModelExecuter executer, [Named(nameof(SigmoidActivationFunction))] IActivationFunction sigmoidActivationFunction)
 		{
 			this.executer = executer;
 			this.sigmoidActivationFunction = sigmoidActivationFunction;

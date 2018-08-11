@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Linq.Expressions;
 using ArtificialIntelligence.Enums;
-using ArtificialIntelligence.Learners;
+using ArtificialIntelligence.Genetic;
 using ArtificialIntelligence.Models;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace ArtificialIntelligence.Tests.Learners.GeneticLearnerTests
+namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 {
 	[TestClass]
 	public class InitalizeTests
 	{
 		private const int populationSize = 10;
+		private const int selectionSize = 4;
 		private Random random;
 		private Mock<IModelInitializer> mockModelInitializer;
-		private Mock<IExecuter> mockExecuter;
+		private Mock<IModelExecuter> mockModelExecuter;
+		private Mock<IModelBreeder> mockModelBreeder;
 		private GeneticLearner sut;
 
 		[TestInitialize]
@@ -23,9 +25,10 @@ namespace ArtificialIntelligence.Tests.Learners.GeneticLearnerTests
 		{
 			random = new Random();
 			mockModelInitializer = new Mock<IModelInitializer>(MockBehavior.Strict);
-			mockExecuter = new Mock<IExecuter>(MockBehavior.Strict);
+			mockModelExecuter = new Mock<IModelExecuter>(MockBehavior.Strict);
+			mockModelBreeder = new Mock<IModelBreeder>(MockBehavior.Strict);
 
-			sut = new GeneticLearner(populationSize, random, mockModelInitializer.Object, mockExecuter.Object);
+			sut = new GeneticLearner(populationSize, selectionSize, random, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object);
 		}
 
 		[TestMethod]
@@ -34,7 +37,7 @@ namespace ArtificialIntelligence.Tests.Learners.GeneticLearnerTests
 			// Arrange
 			var model = CreateFullyConnectedNeuralNetworkModel();
 			var activationCountsPerLayer = new[] { 4, 3 };
-			Expression<Func<IModelInitializer, FullyConnectedNeuralNetworkModel>> createModelFunction = m => m.CreateModel(model.ActivationFunction, activationCountsPerLayer, random);
+			Expression<Func<IModelInitializer, FullyConnectedNeuralNetworkModel>> createModelFunction = m => m.CreateModel(activationCountsPerLayer, model.ActivationFunction, random);
 
 			mockModelInitializer.Setup(createModelFunction)
 				.Returns(new FullyConnectedNeuralNetworkModel());

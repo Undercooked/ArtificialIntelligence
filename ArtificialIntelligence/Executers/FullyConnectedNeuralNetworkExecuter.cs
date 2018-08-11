@@ -5,7 +5,7 @@ using Ninject;
 
 namespace ArtificialIntelligence.Executers
 {
-	public class FullyConnectedNeuralNetworkExecuter : IExecuter
+	public class FullyConnectedNeuralNetworkExecuter : IModelExecuter
 	{
 		private readonly IActivationFunction sigmoidActivationFunction;
 

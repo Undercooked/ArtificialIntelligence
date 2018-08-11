@@ -14,7 +14,7 @@ namespace ArtificailIntelligence.Experiments
 		private readonly int batchSize;
 		private readonly ActivationFunction activationFunction;
 		private readonly int[] activationCountsPerLayer;
-		private readonly IExecuter executer;
+		private readonly IModelExecuter executer;
 		private readonly ILearner learner;
 		private readonly IModelInitializer modelInitializer;
 		private readonly Random random;
@@ -32,7 +32,7 @@ namespace ArtificailIntelligence.Experiments
 			int batchSize,
 			ActivationFunction activationFunction,
 			int[] activationCountsPerLayer,
-			IExecuter executer,
+			IModelExecuter executer,
 			ILearner learner,
 			IModelInitializer modelInitializer,
 			IDataSource dataSource,
@@ -53,7 +53,7 @@ namespace ArtificailIntelligence.Experiments
 
 		public void Initialize()
 		{
-			var model = modelInitializer.CreateModel(activationFunction, activationCountsPerLayer, random);
+			var model = modelInitializer.CreateModel(activationCountsPerLayer, activationFunction, random);
 
 			trainingInputOutputPairs = dataSource.GetData(DataPurpose.Training);
 			testInputOutputPairs = dataSource.GetData(DataPurpose.Test);

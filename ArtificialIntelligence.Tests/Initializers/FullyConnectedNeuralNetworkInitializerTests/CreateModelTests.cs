@@ -27,7 +27,7 @@ namespace ArtificialIntelligence.Tests.Initializers.FullyConnectedNeuralNetworkI
 			var random = new Random();
 
 			// Act
-			var result = sut.CreateModel(activationFunction, activationCountsPerLayer, random);
+			var result = sut.CreateModel(activationCountsPerLayer, activationFunction, random);
 			var biases = result.BiasLayers.SelectMany(l => l);
 			var weights = result.WeightLayers.SelectMany(l => l.Cast<double>());
 

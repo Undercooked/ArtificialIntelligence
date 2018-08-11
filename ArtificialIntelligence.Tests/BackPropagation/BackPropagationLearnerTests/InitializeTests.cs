@@ -1,9 +1,9 @@
-﻿using ArtificialIntelligence.Learners;
+﻿using ArtificialIntelligence.BackPropagation;
 using ArtificialIntelligence.Models;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ArtificialIntelligence.Tests.Learners.BackPropagationLearnerTests
+namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTests
 {
 	[TestClass]
 	public class InitializeTests

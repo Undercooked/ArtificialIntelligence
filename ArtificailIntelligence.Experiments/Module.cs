@@ -1,10 +1,10 @@
 ﻿using System;
 using ArtificialIntelligence;
 using ArtificialIntelligence.ActivationFunctions;
+using ArtificialIntelligence.BackPropagation;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Executers;
 using ArtificialIntelligence.Initializers;
-using ArtificialIntelligence.Learners;
 using Ninject.Modules;
 
 namespace ArtificailIntelligence.Experiments
@@ -15,7 +15,7 @@ namespace ArtificailIntelligence.Experiments
 
 		public override void Load()
 		{
-			Bind<IExecuter>().To<FullyConnectedNeuralNetworkExecuter>();
+			Bind<IModelExecuter>().To<FullyConnectedNeuralNetworkExecuter>();
 			Bind<ILearner>().To<BackPropagationLearner>();
 			Bind<IDataSource>().To<MnistDataSource>();
 			Bind<IModelInitializer>().To<FullyConnectedNeuralNetworkInitializer>();
@@ -39,7 +39,7 @@ namespace ArtificailIntelligence.Experiments
 					100,
 					ActivationFunction.Sigmoid,
 					new[] { 784, 200, 10 },
-					argSyntax.Inject<IExecuter>(),
+					argSyntax.Inject<IModelExecuter>(),
 					argSyntax.Inject<ILearner>(),
 					argSyntax.Inject<IModelInitializer>(),
 					argSyntax.Inject<IDataSource>(),
@@ -59,7 +59,7 @@ namespace ArtificailIntelligence.Experiments
 					1,
 					ActivationFunction.Sigmoid,
 					new[] { 784, 200, 10 },
-					argSyntax.Inject<IExecuter>(),
+					argSyntax.Inject<IModelExecuter>(),
 					argSyntax.Inject<ILearner>(),
 					argSyntax.Inject<IModelInitializer>(),
 					argSyntax.Inject<IDataSource>(),
@@ -79,7 +79,7 @@ namespace ArtificailIntelligence.Experiments
 					int.MaxValue,
 					ActivationFunction.Sigmoid,
 					new[] { 784, 200, 10 },
-					argSyntax.Inject<IExecuter>(),
+					argSyntax.Inject<IModelExecuter>(),
 					argSyntax.Inject<ILearner>(),
 					argSyntax.Inject<IModelInitializer>(),
 					argSyntax.Inject<IDataSource>(),

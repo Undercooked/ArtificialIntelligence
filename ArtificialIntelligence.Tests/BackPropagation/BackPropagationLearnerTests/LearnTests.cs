@@ -1,23 +1,23 @@
-﻿using ArtificialIntelligence.Enums;
-using ArtificialIntelligence.Learners;
+﻿using ArtificialIntelligence.BackPropagation;
+using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace ArtificialIntelligence.Tests.Learners.BackPropagationLearnerTests
+namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTests
 {
 	[TestClass]
 	public class LearnTests
 	{
-		private Mock<IExecuter> mockExecuter;
+		private Mock<IModelExecuter> mockExecuter;
 		private Mock<IActivationFunction> mockSigmoidActivationFunction;
 		private BackPropagationLearner sut;
 
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			mockExecuter = new Mock<IExecuter>(MockBehavior.Strict);
+			mockExecuter = new Mock<IModelExecuter>(MockBehavior.Strict);
 			mockSigmoidActivationFunction = new Mock<IActivationFunction>(MockBehavior.Strict);
 
 			sut = new BackPropagationLearner(mockExecuter.Object, mockSigmoidActivationFunction.Object);

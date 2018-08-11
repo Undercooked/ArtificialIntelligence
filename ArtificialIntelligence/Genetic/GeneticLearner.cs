@@ -1,31 +1,35 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArtificialIntelligence.Models;
 
-namespace ArtificialIntelligence.Learners
+namespace ArtificialIntelligence.Genetic
 {
 	public class GeneticLearner : ILearner
 	{
-		private const double survivorPecentile = 0.2;
-
 		private readonly int populationSize;
+		private readonly int selectionSize;
 		private readonly Random random;
 		private readonly IModelInitializer modelInitializer;
-		private readonly IExecuter executer;
+		private readonly IModelExecuter executer;
+		private readonly IModelBreeder modelBreeder;
+		private readonly object populationCostLock = new object();
 
 		private CostModel<FullyConnectedNeuralNetworkModel>[] population;
-		private object populationCostLock = new object();
+		private bool isFirstLearningIteration = true;
 
 		public FullyConnectedNeuralNetworkModel Model => population[0].Model;
 
-		public GeneticLearner(int populationSize, Random random, IModelInitializer modelInitializer, IExecuter executer)
+		public GeneticLearner(int populationSize, int selectionSize, Random random, IModelInitializer modelInitializer, IModelExecuter executer, IModelBreeder modelBreeder)
 		{
 			this.populationSize = populationSize;
+			this.selectionSize = selectionSize;
 			this.random = random;
 			this.modelInitializer = modelInitializer;
 			this.executer = executer;
+			this.modelBreeder = modelBreeder;
 			population = new CostModel<FullyConnectedNeuralNetworkModel>[populationSize];
 		}
 
@@ -33,11 +37,9 @@ namespace ArtificialIntelligence.Learners
 		{
 			population[0] = new CostModel<FullyConnectedNeuralNetworkModel>(model);
 
-			var activationCountsPerLayer = GetActivationCountsPerLayer();
-
 			for (var populationIndex = 1; populationIndex < populationSize; populationIndex++)
 			{
-				var member = modelInitializer.CreateModel(model.ActivationFunction, activationCountsPerLayer.ToArray(), random);
+				var member = modelInitializer.CreateModel(model.ActivationCountsPerLayer, model.ActivationFunction, random);
 				population[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(member);
 			}
 		}
@@ -48,21 +50,17 @@ namespace ArtificialIntelligence.Learners
 			{
 				CalculateCostForPopulation(inputOutputPair);
 				SortPopulation();
-
+				CreateNextGeneration();
 			});
-		}
 
-		private int[] GetActivationCountsPerLayer()
-		{
-			var activationCountsPerLayer = Model.BiasLayers.Select(l => l.Length).ToList();
-			activationCountsPerLayer.Insert(0, Model.WeightLayers[0].GetLength(0));
-
-			return activationCountsPerLayer.ToArray();
+			isFirstLearningIteration = false;
 		}
 
 		private void CalculateCostForPopulation(InputOutputPairModel inputOutputPair)
 		{
-			for (var individualIndex = 0; individualIndex < population.Length; individualIndex++)
+			var individualIndex = isFirstLearningIteration ? 0 : selectionSize;
+
+			for ( ; individualIndex < population.Length; individualIndex++)
 			{
 				var model = population[individualIndex];
 				var allActivations = executer.Execute(Model, inputOutputPair.Inputs);
@@ -95,9 +93,39 @@ namespace ArtificialIntelligence.Learners
 			Array.Sort(population, (x, y) => x.Cost.CompareTo(y.Cost));
 		}
 
-		private CostModel<FullyConnectedNeuralNetworkModel>[] SelectSurvivors(int iteration)
+		private void CreateNextGeneration()
 		{
-			var selectionSize = (int)Math.Round(populationSize * survivorPecentile);
+			var parents = SelectSurvivors();
+			var indexesBred = new ConcurrentDictionary<int, List<int>>();
+
+			Parallel.For(parents.Length, population.Length, childIndex =>
+			{
+				var motherIndex = random.Next(selectionSize);
+				var fatherIndex = random.Next(selectionSize);
+				var motherHasChildren = indexesBred.ContainsKey(motherIndex);
+
+				if (motherIndex != fatherIndex && (!motherHasChildren || indexesBred[motherIndex].Contains(fatherIndex)))
+				{
+					var mother = parents[motherIndex].Model;
+					var father = parents[fatherIndex].Model;
+					var child = modelBreeder.Breed(mother, father);
+
+					population[childIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(child);
+
+					indexesBred.AddOrUpdate(motherIndex, new List<int>() { fatherIndex }, (key, value) =>
+					{
+						value.Add(fatherIndex);
+
+						return value;
+					});
+				}
+			});
+
+			Array.Copy(parents, population, parents.Length);
+		}
+
+		private CostModel<FullyConnectedNeuralNetworkModel>[] SelectSurvivors()
+		{
 			var topSelectionSize = (int)Math.Round(selectionSize * 0.7);
 			var randomSelectionSize = selectionSize - topSelectionSize;
 			var selection = new CostModel<FullyConnectedNeuralNetworkModel>[selectionSize];

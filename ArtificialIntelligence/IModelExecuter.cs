@@ -2,7 +2,7 @@
 
 namespace ArtificialIntelligence
 {
-	public interface IExecuter
+	public interface IModelExecuter
 	{
 		double[][] Execute(FullyConnectedNeuralNetworkModel model, double[] activations);
 	}

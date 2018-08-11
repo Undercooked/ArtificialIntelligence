@@ -6,13 +6,25 @@ namespace ArtificialIntelligence.Initializers
 {
 	public class FullyConnectedNeuralNetworkInitializer : IModelInitializer
 	{
-		public FullyConnectedNeuralNetworkModel CreateModel(ActivationFunction activationFunction, int[] activationCountsPerLayer, Random random)
+		public FullyConnectedNeuralNetworkModel CreateModel(int[] activationCountsPerLayer, ActivationFunction activationFunction, Random random)
 		{
 			return new FullyConnectedNeuralNetworkModel
 			{
+				ActivationCountsPerLayer = activationCountsPerLayer,
 				ActivationFunction = activationFunction,
 				BiasLayers = GenerateInitialBiases(activationCountsPerLayer, random),
 				WeightLayers = GenerateInitialWeights(activationCountsPerLayer, random)
+			};
+		}
+
+		public FullyConnectedNeuralNetworkModel CreateModel(int[] activationCountsPerLayer, ActivationFunction activationFunction, double[][] biasLayers, double[][,] weightLayers)
+		{
+			return new FullyConnectedNeuralNetworkModel
+			{
+				ActivationCountsPerLayer = activationCountsPerLayer,
+				ActivationFunction = activationFunction,
+				BiasLayers = biasLayers,
+				WeightLayers = weightLayers
 			};
 		}
 

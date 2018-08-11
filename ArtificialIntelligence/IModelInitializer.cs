@@ -6,6 +6,7 @@ namespace ArtificialIntelligence
 {
 	public interface IModelInitializer
 	{
-		FullyConnectedNeuralNetworkModel CreateModel(ActivationFunction activationFunction, int[] activationCountsPerLayer, Random random);
+		FullyConnectedNeuralNetworkModel CreateModel(int[] activationCountsPerLayer, ActivationFunction activationFunction, Random random);
+		FullyConnectedNeuralNetworkModel CreateModel(int[] activationCountsPerLayer, ActivationFunction activationFunction, double[][] biasLayers, double[][,] weightLayers);
 	}
 }
