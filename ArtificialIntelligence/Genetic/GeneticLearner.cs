@@ -60,10 +60,10 @@ namespace ArtificialIntelligence.Genetic
 		{
 			var individualIndex = isFirstLearningIteration ? 0 : selectionSize;
 
-			for ( ; individualIndex < population.Length; individualIndex++)
+			for (; individualIndex < population.Length; individualIndex++)
 			{
-				var model = population[individualIndex];
-				var allActivations = executer.Execute(Model, inputOutputPair.Inputs);
+				var model = population[individualIndex].Model;
+				var allActivations = executer.Execute(model, inputOutputPair.Inputs);
 				var cost = CalculateCost(inputOutputPair.Outputs, allActivations.Last());
 
 				lock (populationCostLock)

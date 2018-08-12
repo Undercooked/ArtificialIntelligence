@@ -75,6 +75,8 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 			var inputOutputBatches = CreateBatches();
 			var expectedResult = new FullyConnectedNeuralNetworkModel
 			{
+				ActivationCountsPerLayer = new[] { 4, 3 },
+				ActivationFunction = activationFunction,
 				BiasLayers = new[]
 				{
 					new[] { -1.7469237523315382, 0.87181075544508735, 0.035472836914632211 }
@@ -88,8 +90,7 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 						{ -1.2309194153735166, -0.67912216088816624, -0.32232313672256552 },
 						{ 0.46326568779018962, 0.19574613013194636, -0.9459582954704272 }
 					}
-				},
-				ActivationFunction = activationFunction
+				}
 			};
 
 			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(inputOutputBatches[0].Inputs))))
@@ -111,6 +112,8 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 		{
 			return new FullyConnectedNeuralNetworkModel
 			{
+				ActivationCountsPerLayer = new[] { 4, 3 },
+				ActivationFunction = activationFunction,
 				BiasLayers = new[]
 				{
 					new[] { -0.84167747099030643, 0.66957177392652811, 0.78872177740033789 }
@@ -124,8 +127,7 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 						{ -0.35679294977187781, -0.81505192248851621, 0.14074044914019312 },
 						{ 0.60933753829884219, 0.11109885252597684, -0.59281794335358673 }
 					}
-				},
-				ActivationFunction = activationFunction
+				}
 			};
 		}
 
