@@ -100,8 +100,9 @@ namespace ArtificialIntelligence.Genetic
 
 			Parallel.For(parents.Length, population.Length, childIndex =>
 			{
-				var motherIndex = random.Next(selectionSize);
-				var fatherIndex = random.Next(selectionSize);
+				var parentIndexes = new[] { random.Next(selectionSize), random.Next(selectionSize) }.OrderBy(i => i);
+				var motherIndex = parentIndexes.ElementAt(0);
+				var fatherIndex = parentIndexes.ElementAt(1);
 				var motherHasChildren = indexesBred.ContainsKey(motherIndex);
 
 				if (motherIndex != fatherIndex && (!motherHasChildren || indexesBred[motherIndex].Contains(fatherIndex)))

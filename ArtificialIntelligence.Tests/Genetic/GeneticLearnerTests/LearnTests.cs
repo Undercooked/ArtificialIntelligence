@@ -5,6 +5,7 @@ using System.Linq;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Genetic;
 using ArtificialIntelligence.Models;
+using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -51,15 +52,18 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		{
 			// Arrange
 			var model = CreateFullyConnectedNeuralNetworkModel();
-			var batch = CreateBatches();
+			var batch = CreateBatch();
 
-			for (var i = 0; i < populationSize; i++)
-			{
-				mockModelExecuter.Setup(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[i])), batch[i].Inputs))
-					.Returns(activationCountsPerLayer.Select(l => CreateAndInitializeDoubleArray(l, random.NextDouble)).ToArray());
-			}
+			mockModelExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.IsAny<double[]>()))
+				.Returns(activationCountsPerLayer.Select(l => CreateAndInitializeDoubleArray(l, () => 0.5)).ToArray());
+			// Setup 1 member of the population to return the desired output for the batches
+			mockModelExecuter.Setup(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[0].Inputs))
+				.Returns(new[] { batch[0].Outputs });
+			mockModelExecuter.Setup(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[1].Inputs))
+				.Returns(new[] { batch[1].Outputs });
 
-			// TODO: setup mockModelBreeder.Breed
+			mockModelBreeder.Setup(m => m.Breed(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), It.Is<FullyConnectedNeuralNetworkModel>(it => !it.Equals(population[1]) && population.Contains(it))))
+				.Returns(new FullyConnectedNeuralNetworkModel());
 
 			sut.Initialize(model);
 
@@ -67,6 +71,11 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			sut.Learn(batch);
 
 			// Assert
+			mockModelExecuter.Verify(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.IsAny<double[]>()), Times.Exactly(6));
+			mockModelExecuter.Verify(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[0].Inputs), Times.Once);
+			mockModelExecuter.Verify(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[1].Inputs), Times.Once);
+			mockModelBreeder.Verify(m => m.Breed(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), It.Is<FullyConnectedNeuralNetworkModel>(it => !it.Equals(population[1]) && population.Contains(it))), Times.Once);
+			sut.Model.Should().BeSameAs(population[1]);
 		}
 
 		[TestMethod]
@@ -74,7 +83,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		{
 			// Arrange
 			var model = CreateFullyConnectedNeuralNetworkModel();
-			var batch = CreateBatches();
+			var batch = CreateBatch();
 
 			for (var i = selectionSize; i < populationSize; i++)
 			{
@@ -93,8 +102,6 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 
 		private FullyConnectedNeuralNetworkModel CreateFullyConnectedNeuralNetworkModel()
 		{
-
-
 			return new FullyConnectedNeuralNetworkModel
 			{
 				ActivationCountsPerLayer = activationCountsPerLayer,
@@ -102,7 +109,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 				BiasLayers = activationCountsPerLayer.Skip(1)
 					.Select(l => CreateAndInitializeDoubleArray(l, random.NextDouble)).ToArray(),
 				WeightLayers = activationCountsPerLayer.Skip(1)
-					.Select((l, i) => CreateAndInitializeTwoDimentionalDoubleArray(activationCountsPerLayer[i - 1], l, random.NextDouble)).ToArray()
+					.Select((l, i) => CreateAndInitializeTwoDimentionalDoubleArray(activationCountsPerLayer[i], l, random.NextDouble)).ToArray()
 			};
 		}
 
@@ -128,7 +135,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			return twoDimensionalArray;
 		}
 
-		private InputOutputPairModel[] CreateBatches()
+		private InputOutputPairModel[] CreateBatch()
 		{
 			return new InputOutputPairModel[]
 			{
