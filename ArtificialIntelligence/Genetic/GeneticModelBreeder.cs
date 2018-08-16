@@ -95,6 +95,11 @@ namespace ArtificialIntelligence.Genetic
 
 			for (var mutationCount = 0; mutationCount < dnaToMutateCount; mutationCount++)
 			{
+				if (mutationCount + 1 > dnaToMutateCount && random.NextDouble() > dnaToMutateCount - mutationCount)
+				{
+					break;
+				}
+
 				var biasOrWeight = random.Next(totalDnaCount);
 
 				if (biasOrWeight < biasCount)

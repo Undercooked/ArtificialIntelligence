@@ -49,9 +49,10 @@ namespace ArtificialIntelligence.Genetic
 			Parallel.ForEach(batch, inputOutputPair =>
 			{
 				CalculateCostForPopulation(inputOutputPair);
-				SortPopulation();
-				CreateNextGeneration();
 			});
+
+			SortPopulation();
+			CreateNextGeneration();
 
 			isFirstLearningIteration = false;
 		}
@@ -100,26 +101,31 @@ namespace ArtificialIntelligence.Genetic
 
 			Parallel.For(parents.Length, population.Length, childIndex =>
 			{
-				var parentIndexes = new[] { random.Next(selectionSize), random.Next(selectionSize) }.OrderBy(i => i);
-				var motherIndex = parentIndexes.ElementAt(0);
-				var fatherIndex = parentIndexes.ElementAt(1);
-				var motherHasChildren = indexesBred.ContainsKey(motherIndex);
+				var motherIndex = 0;
+				var fatherIndex = 0;
+				var motherHasChildren = false;
 
-				if (motherIndex != fatherIndex && (!motherHasChildren || indexesBred[motherIndex].Contains(fatherIndex)))
+				while (motherIndex == fatherIndex || motherHasChildren && indexesBred[motherIndex].Contains(fatherIndex))
 				{
-					var mother = parents[motherIndex].Model;
-					var father = parents[fatherIndex].Model;
-					var child = modelBreeder.Breed(mother, father);
+					var parentIndexes = new[] { random.Next(selectionSize), random.Next(selectionSize) }.OrderBy(i => i);
 
-					population[childIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(child);
-
-					indexesBred.AddOrUpdate(motherIndex, new List<int>() { fatherIndex }, (key, value) =>
-					{
-						value.Add(fatherIndex);
-
-						return value;
-					});
+					motherIndex = parentIndexes.ElementAt(0);
+					fatherIndex = parentIndexes.ElementAt(1);
+					motherHasChildren = indexesBred.ContainsKey(motherIndex);
 				}
+
+				var mother = parents[motherIndex].Model;
+				var father = parents[fatherIndex].Model;
+				var child = modelBreeder.Breed(mother, father);
+
+				population[childIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(child);
+
+				indexesBred.AddOrUpdate(motherIndex, new List<int>() { fatherIndex }, (key, value) =>
+				{
+					value.Add(fatherIndex);
+
+					return value;
+				});
 			});
 
 			Array.Copy(parents, population, parents.Length);
@@ -134,15 +140,13 @@ namespace ArtificialIntelligence.Genetic
 
 			for (var populationIndex = 0; populationIndex < topSelectionSize; populationIndex++)
 			{
-				var model = population[populationIndex].Model;
-				selection[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(model);
+				selection[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(population[populationIndex].Model, population[populationIndex].Cost);
 			}
 
 			for (var populationIndex = topSelectionSize; populationIndex < selection.Length; populationIndex++)
 			{
 				var selectedMemberIndex = uniqueRandomIndexes[populationIndex - topSelectionSize];
-				var model = population[selectedMemberIndex].Model;
-				selection[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(model);
+				selection[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(population[selectedMemberIndex].Model, population[selectedMemberIndex].Cost);
 			}
 
 			return selection.ToArray();

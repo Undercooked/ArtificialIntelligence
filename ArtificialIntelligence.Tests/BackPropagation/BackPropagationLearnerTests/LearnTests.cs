@@ -1,4 +1,5 @@
-﻿using ArtificialIntelligence.BackPropagation;
+﻿using System.Linq;
+using ArtificialIntelligence.BackPropagation;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
 using FluentAssertions;
@@ -29,9 +30,11 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 			// Arrange
 			var activationFunction = ActivationFunction.Sigmoid;
 			var model = CreateFullyConnectedNeuralNetworkModel(activationFunction);
-			var inputOutputBatches = CreateBatches();
+			var batch = CreateBatch();
 			var expectedResult = new FullyConnectedNeuralNetworkModel
 			{
+				ActivationCountsPerLayer = new[] { 4, 3 },
+				ActivationFunction = activationFunction,
 				BiasLayers = new[]
 				{
 					new[] { -1.2943006116609224, 0.77069126468580773, 0.41209730715748505 }
@@ -45,13 +48,12 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 						{ -0.7938561825726973, -0.74708704168834117, -0.0907913437911862 },
 						{ 0.536301613044516, 0.1534224913289616, -0.76938811941200691 }
 					}
-				},
-				ActivationFunction = activationFunction
+				}
 			};
 
-			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(inputOutputBatches[0].Inputs))))
+			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[0].Inputs))))
 				.Returns<FullyConnectedNeuralNetworkModel, double[]>((arg1, arg2) => new double[][] { arg2, new[] { 0.23878872335077425, 0.41971501950211154, 0.66660062117031826 } });
-			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(inputOutputBatches[1].Inputs))))
+			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[1].Inputs))))
 				.Returns<FullyConnectedNeuralNetworkModel, double[]>((arg1, arg2) => new double[][] { arg2, new[] { 0.51112549346515468, 0.53561880887592039, 0.61608786703901575 } });
 			mockSigmoidActivationFunction.Setup(m => m.CalculateDerivative(It.IsAny<double>()))
 				.Returns<double>(arg1 => 0.5 * arg1);
@@ -59,10 +61,12 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 			sut.Initialize(model);
 
 			// Act
-			sut.Learn(inputOutputBatches);
+			sut.Learn(batch);
 
 			// Assert
-			sut.Model.Should().NotBeNull();
+			mockExecuter.Verify(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[0].Inputs))), Times.Once);
+			mockExecuter.Verify(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[1].Inputs))), Times.Once);
+			mockSigmoidActivationFunction.Verify(m => m.CalculateDerivative(It.IsAny<double>()), Times.Exactly(model.BiasLayers.Sum(l => l.Length) * batch.Length));
 			sut.Model.Should().BeEquivalentTo(expectedResult);
 		}
 
@@ -72,7 +76,7 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 			// Arrange
 			var activationFunction = ActivationFunction.None;
 			var model = CreateFullyConnectedNeuralNetworkModel(activationFunction);
-			var inputOutputBatches = CreateBatches();
+			var batch = CreateBatch();
 			var expectedResult = new FullyConnectedNeuralNetworkModel
 			{
 				ActivationCountsPerLayer = new[] { 4, 3 },
@@ -93,18 +97,19 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 				}
 			};
 
-			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(inputOutputBatches[0].Inputs))))
+			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[0].Inputs))))
 				.Returns<FullyConnectedNeuralNetworkModel, double[]>((arg1, arg2) => new double[][] { arg2, new[] { 0.23878872335077425, 0.41971501950211154, 0.66660062117031826 } });
-			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(inputOutputBatches[1].Inputs))))
+			mockExecuter.Setup(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[1].Inputs))))
 				.Returns<FullyConnectedNeuralNetworkModel, double[]>((arg1, arg2) => new double[][] { arg2, new[] { 0.51112549346515468, 0.53561880887592039, 0.61608786703901575 } });
 
 			sut.Initialize(model);
 
 			// Act
-			sut.Learn(inputOutputBatches);
+			sut.Learn(batch);
 
 			// Assert
-			sut.Model.Should().NotBeNull();
+			mockExecuter.Verify(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[0].Inputs))), Times.Once);
+			mockExecuter.Verify(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.Is<double[]>(it => it.Equals(batch[1].Inputs))), Times.Once);
 			sut.Model.Should().BeEquivalentTo(expectedResult);
 		}
 
@@ -131,7 +136,7 @@ namespace ArtificialIntelligence.Tests.BackPropagation.BackPropagationLearnerTes
 			};
 		}
 
-		private InputOutputPairModel[] CreateBatches()
+		private InputOutputPairModel[] CreateBatch()
 		{
 			return new InputOutputPairModel[]
 			{

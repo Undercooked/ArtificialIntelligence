@@ -78,6 +78,7 @@ namespace ArtificialIntelligence.BackPropagation
 		{
 			var newModel = new FullyConnectedNeuralNetworkModel
 			{
+				ActivationCountsPerLayer = Model.ActivationCountsPerLayer,
 				ActivationFunction = Model.ActivationFunction,
 				BiasLayers = new double[Model.BiasLayers.Length][],
 				WeightLayers = new double[Model.WeightLayers.Length][,]

@@ -46,14 +46,16 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			sut.Initialize(model);
 
 			// Assert
-			sut.Model.Should().BeSameAs(model);
 			mockModelInitializer.Verify(createModelFunction, Times.Exactly(populationSize - 1));
+			sut.Model.Should().BeSameAs(model);
 		}
 
 		private FullyConnectedNeuralNetworkModel CreateFullyConnectedNeuralNetworkModel()
 		{
 			return new FullyConnectedNeuralNetworkModel
 			{
+				ActivationCountsPerLayer = new[] { 4, 3 },
+				ActivationFunction = ActivationFunction.Sigmoid,
 				BiasLayers = new[]
 				{
 					new[] { -0.84167747099030643, 0.66957177392652811, 0.78872177740033789 }
@@ -67,8 +69,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 						{ -0.35679294977187781, -0.81505192248851621, 0.14074044914019312 },
 						{ 0.60933753829884219, 0.11109885252597684, -0.59281794335358673 }
 					}
-				},
-				ActivationFunction = ActivationFunction.Sigmoid
+				}
 			};
 		}
 	}

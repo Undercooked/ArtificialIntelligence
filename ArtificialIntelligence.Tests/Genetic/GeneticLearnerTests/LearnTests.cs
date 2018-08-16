@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ArtificialIntelligence.Enums;
@@ -48,7 +47,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		}
 
 		[TestMethod]
-		public void FirstIterationOfLearnPerformsCorrectCalls()
+		public void LearnPerformsTheCorrectCalls()
 		{
 			// Arrange
 			var model = CreateFullyConnectedNeuralNetworkModel();
@@ -66,6 +65,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 				.Returns(new FullyConnectedNeuralNetworkModel());
 
 			sut.Initialize(model);
+			population.Add(model);
 
 			// Act
 			sut.Learn(batch);
@@ -76,28 +76,6 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			mockModelExecuter.Verify(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[1].Inputs), Times.Once);
 			mockModelBreeder.Verify(m => m.Breed(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), It.Is<FullyConnectedNeuralNetworkModel>(it => !it.Equals(population[1]) && population.Contains(it))), Times.Once);
 			sut.Model.Should().BeSameAs(population[1]);
-		}
-
-		[TestMethod]
-		public void SecondIterationOfLearnPerformsCorrectCalls()
-		{
-			// Arrange
-			var model = CreateFullyConnectedNeuralNetworkModel();
-			var batch = CreateBatch();
-
-			for (var i = selectionSize; i < populationSize; i++)
-			{
-				mockModelExecuter.Setup(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[i])), batch[i].Inputs))
-					.Returns(activationCountsPerLayer.Select(l => CreateAndInitializeDoubleArray(l, random.NextDouble)).ToArray());
-			}
-
-			sut.Initialize(model);
-			sut.Learn(batch);
-
-			// Act
-			sut.Learn(batch);
-
-			// Assert
 		}
 
 		private FullyConnectedNeuralNetworkModel CreateFullyConnectedNeuralNetworkModel()
