@@ -56,7 +56,7 @@
     <Compile Include="DataSources\MnistDataSource.cs" />
     <Compile Include="IExperiment.cs" />
     <Compile Include="Module.cs" />
-    <Compile Include="NeuralNetworkWithBackPropagationExperiment.cs" />
+    <Compile Include="Experiment.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

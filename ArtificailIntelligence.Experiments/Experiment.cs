@@ -9,7 +9,7 @@ using ArtificialIntelligence.Models;
 
 namespace ArtificailIntelligence.Experiments
 {
-	public class NeuralNetworkWithBackPropagationExperiment : IExperiment
+	public class Experiment : IExperiment
 	{
 		private readonly int batchSize;
 		private readonly ActivationFunction activationFunction;
@@ -26,7 +26,7 @@ namespace ArtificailIntelligence.Experiments
 		public string Title { get; }
 		public int Iterations { get; }
 
-		public NeuralNetworkWithBackPropagationExperiment(
+		public Experiment(
 			string title,
 			int iterations,
 			int batchSize,
