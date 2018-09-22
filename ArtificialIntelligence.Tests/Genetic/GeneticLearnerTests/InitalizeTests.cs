@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Genetic;
 using ArtificialIntelligence.Models;
+using ArtificialIntelligence.RandomNumberServices;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -14,21 +15,21 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 	{
 		private const int populationSize = 10;
 		private const int selectionSize = 4;
-		private Random random;
 		private Mock<IModelInitializer> mockModelInitializer;
 		private Mock<IModelExecuter> mockModelExecuter;
 		private Mock<IModelBreeder> mockModelBreeder;
+		private ThreadSafeRandom random;
 		private GeneticLearner sut;
 
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			random = new Random();
 			mockModelInitializer = new Mock<IModelInitializer>(MockBehavior.Strict);
 			mockModelExecuter = new Mock<IModelExecuter>(MockBehavior.Strict);
 			mockModelBreeder = new Mock<IModelBreeder>(MockBehavior.Strict);
+			random = new ThreadSafeRandom();
 
-			sut = new GeneticLearner(populationSize, selectionSize, random, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object);
+			sut = new GeneticLearner(populationSize, selectionSize, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object, random);
 		}
 
 		[TestMethod]
@@ -37,7 +38,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			// Arrange
 			var model = CreateFullyConnectedNeuralNetworkModel();
 			var activationCountsPerLayer = new[] { 4, 3 };
-			Expression<Func<IModelInitializer, FullyConnectedNeuralNetworkModel>> createModelFunction = m => m.CreateModel(activationCountsPerLayer, model.ActivationFunction, random);
+			Expression<Func<IModelInitializer, FullyConnectedNeuralNetworkModel>> createModelFunction = m => m.CreateModel(activationCountsPerLayer, model.ActivationFunction);
 
 			mockModelInitializer.Setup(createModelFunction)
 				.Returns(new FullyConnectedNeuralNetworkModel());

@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Initializers;
+using ArtificialIntelligence.RandomNumberServices;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,12 +10,14 @@ namespace ArtificialIntelligence.Tests.Initializers.FullyConnectedNeuralNetworkI
 	[TestClass]
 	public class CreateModelTests
 	{
+		private ThreadSafeRandom random;
 		private FullyConnectedNeuralNetworkInitializer sut;
 
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			sut = new FullyConnectedNeuralNetworkInitializer();
+			random = new ThreadSafeRandom();
+			sut = new FullyConnectedNeuralNetworkInitializer(random);
 		}
 
 		[TestMethod]
@@ -24,10 +26,9 @@ namespace ArtificialIntelligence.Tests.Initializers.FullyConnectedNeuralNetworkI
 			// Arrange
 			var activationFunction = ActivationFunction.Sigmoid;
 			var activationCountsPerLayer = new[] { 5, 4, 3, 2 };
-			var random = new Random();
 
 			// Act
-			var result = sut.CreateModel(activationCountsPerLayer, activationFunction, random);
+			var result = sut.CreateModel(activationCountsPerLayer, activationFunction);
 			var biases = result.BiasLayers.SelectMany(l => l);
 			var weights = result.WeightLayers.SelectMany(l => l.Cast<double>());
 

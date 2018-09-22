@@ -1,19 +1,26 @@
-﻿using System;
-using ArtificialIntelligence.Enums;
+﻿using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Models;
+using ArtificialIntelligence.RandomNumberServices;
 
 namespace ArtificialIntelligence.Initializers
 {
 	public class FullyConnectedNeuralNetworkInitializer : IModelInitializer
 	{
-		public FullyConnectedNeuralNetworkModel CreateModel(int[] activationCountsPerLayer, ActivationFunction activationFunction, Random random)
+		private readonly ThreadSafeRandom random;
+
+		public FullyConnectedNeuralNetworkInitializer(ThreadSafeRandom random)
+		{
+			this.random = random;
+		}
+
+		public FullyConnectedNeuralNetworkModel CreateModel(int[] activationCountsPerLayer, ActivationFunction activationFunction)
 		{
 			return new FullyConnectedNeuralNetworkModel
 			{
 				ActivationCountsPerLayer = activationCountsPerLayer,
 				ActivationFunction = activationFunction,
-				BiasLayers = GenerateInitialBiases(activationCountsPerLayer, random),
-				WeightLayers = GenerateInitialWeights(activationCountsPerLayer, random)
+				BiasLayers = GenerateInitialBiases(activationCountsPerLayer),
+				WeightLayers = GenerateInitialWeights(activationCountsPerLayer)
 			};
 		}
 
@@ -28,7 +35,7 @@ namespace ArtificialIntelligence.Initializers
 			};
 		}
 
-		private double[][] GenerateInitialBiases(int[] activationCountsPerLayer, Random random)
+		private double[][] GenerateInitialBiases(int[] activationCountsPerLayer)
 		{
 			var numberOfBiasLayers = activationCountsPerLayer.Length - 1;
 			var biases = new double[numberOfBiasLayers][];
@@ -46,7 +53,7 @@ namespace ArtificialIntelligence.Initializers
 			return biases;
 		}
 
-		private double[][,] GenerateInitialWeights(int[] activationCountsPerLayer, Random random)
+		private double[][,] GenerateInitialWeights(int[] activationCountsPerLayer)
 		{
 			var numberOfLayersOfWeights = activationCountsPerLayer.Length - 1;
 			var weights = new double[numberOfLayersOfWeights][,];

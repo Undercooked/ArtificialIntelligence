@@ -4,32 +4,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArtificialIntelligence.Models;
+using ArtificialIntelligence.RandomNumberServices;
+using NLog;
 
 namespace ArtificialIntelligence.Genetic
 {
 	public class GeneticLearner : ILearner
 	{
+		private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
 		private readonly int populationSize;
 		private readonly int selectionSize;
-		private readonly Random random;
 		private readonly IModelInitializer modelInitializer;
-		private readonly IModelExecuter executer;
+		private readonly IModelExecuter modelExecuter;
 		private readonly IModelBreeder modelBreeder;
-		private readonly object populationCostLock = new object();
+		private readonly object[] populationCostLocks;
+		private readonly ThreadSafeRandom random;
 
 		private CostModel<FullyConnectedNeuralNetworkModel>[] population;
 		private bool isFirstLearningIteration = true;
 
 		public FullyConnectedNeuralNetworkModel Model => population[0].Model;
 
-		public GeneticLearner(int populationSize, int selectionSize, Random random, IModelInitializer modelInitializer, IModelExecuter executer, IModelBreeder modelBreeder)
+		public GeneticLearner(int populationSize, int selectionSize, IModelInitializer modelInitializer, IModelExecuter modelExecuter, IModelBreeder modelBreeder, ThreadSafeRandom random)
 		{
 			this.populationSize = populationSize;
 			this.selectionSize = selectionSize;
-			this.random = random;
 			this.modelInitializer = modelInitializer;
-			this.executer = executer;
+			this.modelExecuter = modelExecuter;
 			this.modelBreeder = modelBreeder;
+			this.random = random;
+			populationCostLocks = new object[populationSize].Select(o => new object()).ToArray();
 			population = new CostModel<FullyConnectedNeuralNetworkModel>[populationSize];
 		}
 
@@ -39,9 +44,11 @@ namespace ArtificialIntelligence.Genetic
 
 			for (var populationIndex = 1; populationIndex < populationSize; populationIndex++)
 			{
-				var member = modelInitializer.CreateModel(model.ActivationCountsPerLayer, model.ActivationFunction, random);
+				var member = modelInitializer.CreateModel(model.ActivationCountsPerLayer, model.ActivationFunction);
 				population[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(member);
 			}
+
+			CalculateDiversity();
 		}
 
 		public void Learn(InputOutputPairModel[] batch)
@@ -53,6 +60,7 @@ namespace ArtificialIntelligence.Genetic
 
 			SortPopulation();
 			CreateNextGeneration();
+			CalculateDiversity();
 
 			isFirstLearningIteration = false;
 		}
@@ -64,10 +72,10 @@ namespace ArtificialIntelligence.Genetic
 			for (; individualIndex < population.Length; individualIndex++)
 			{
 				var model = population[individualIndex].Model;
-				var allActivations = executer.Execute(model, inputOutputPair.Inputs);
+				var allActivations = modelExecuter.Execute(model, inputOutputPair.Inputs);
 				var cost = CalculateCost(inputOutputPair.Outputs, allActivations.Last());
 
-				lock (populationCostLock)
+				lock (populationCostLocks[individualIndex])
 				{
 					population[individualIndex].Cost += cost;
 				}
@@ -94,7 +102,7 @@ namespace ArtificialIntelligence.Genetic
 			Array.Sort(population, (x, y) => x.Cost.CompareTo(y.Cost));
 		}
 
-		private void CreateNextGeneration()
+		public void CreateNextGeneration()
 		{
 			var parents = SelectSurvivors();
 			var indexesBred = new ConcurrentDictionary<int, List<int>>();
@@ -167,6 +175,43 @@ namespace ArtificialIntelligence.Genetic
 			}
 
 			return uniqueRandomIntegers;
+		}
+
+		private void CalculateDiversity()
+		{
+			var totalDistance = 0.0;
+			var totalDistanceLock = new object();
+
+			Parallel.For(0, populationSize, qi =>
+			{
+				for (var pi = qi + 1; pi < populationSize; pi++)
+				{
+					var q = new List<double>();
+					var p = new List<double>();
+
+					q.AddRange(population[qi].Model.BiasLayers.SelectMany(l => l));
+					q.AddRange(population[qi].Model.WeightLayers.SelectMany(l => l.Cast<double>()));
+					p.AddRange(population[pi].Model.BiasLayers.SelectMany(l => l));
+					p.AddRange(population[pi].Model.WeightLayers.SelectMany(l => l.Cast<double>()));
+
+					var distance = EuclideanDistance(q.ToArray(), p.ToArray());
+
+					lock (totalDistanceLock)
+					{
+						totalDistance += distance;
+					}
+				}
+			});
+
+			var numberOfDistances = (Math.Pow(populationSize, 2) - populationSize) / 2;
+			var averageDistance = totalDistance / numberOfDistances;
+
+			logger.Info($"Average distance: {averageDistance} | Total distance: {totalDistance}");
+		}
+
+		private double EuclideanDistance(double[] q, double[] p)
+		{
+			return Math.Sqrt(q.Select((qi, i) => Math.Pow(qi - p[i], 2)).Sum());
 		}
 	}
 }

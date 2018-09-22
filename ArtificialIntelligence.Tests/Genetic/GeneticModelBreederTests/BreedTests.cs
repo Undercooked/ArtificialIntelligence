@@ -4,6 +4,7 @@ using System.Linq;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Genetic;
 using ArtificialIntelligence.Models;
+using ArtificialIntelligence.RandomNumberServices;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -14,14 +15,14 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticModelBreederTests
 	public class BreedTests
 	{
 		private Mock<IModelInitializer> mockModelInitializer;
-		private Random random;
+		private ThreadSafeRandom random;
 		private GeneticModelBreeder sut;
 
 		[TestInitialize]
 		public void TestInitialize()
 		{
 			mockModelInitializer = new Mock<IModelInitializer>(MockBehavior.Strict);
-			random = new Random();
+			random = new ThreadSafeRandom();
 
 			sut = new GeneticModelBreeder(mockModelInitializer.Object, random);
 		}

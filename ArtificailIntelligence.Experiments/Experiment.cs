@@ -35,8 +35,7 @@ namespace ArtificailIntelligence.Experiments
 			IModelExecuter executer,
 			ILearner learner,
 			IModelInitializer modelInitializer,
-			IDataSource dataSource,
-			Random random)
+			IDataSource dataSource)
 		{
 			Title = title;
 			Iterations = iterations;
@@ -48,12 +47,12 @@ namespace ArtificailIntelligence.Experiments
 			this.learner = learner;
 			this.modelInitializer = modelInitializer;
 			this.dataSource = dataSource;
-			this.random = random;
+			random = new Random();
 		}
 
 		public void Initialize()
 		{
-			var model = modelInitializer.CreateModel(activationCountsPerLayer, activationFunction, random);
+			var model = modelInitializer.CreateModel(activationCountsPerLayer, activationFunction);
 
 			trainingInputOutputPairs = dataSource.GetData(DataPurpose.Training);
 			testInputOutputPairs = dataSource.GetData(DataPurpose.Test);

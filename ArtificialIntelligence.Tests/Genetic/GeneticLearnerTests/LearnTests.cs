@@ -4,6 +4,7 @@ using System.Linq;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Genetic;
 using ArtificialIntelligence.Models;
+using ArtificialIntelligence.RandomNumberServices;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -18,7 +19,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		private static readonly int[] activationCountsPerLayer = new[] { 4, 3 };
 		private static readonly ActivationFunction activationFunction = ActivationFunction.Sigmoid;
 
-		private Random random;
+		private ThreadSafeRandom random;
 		private Mock<IModelInitializer> mockModelInitializer;
 		private Mock<IModelExecuter> mockModelExecuter;
 		private Mock<IModelBreeder> mockModelBreeder;
@@ -28,15 +29,15 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			random = new Random();
+			random = new ThreadSafeRandom();
 			mockModelInitializer = new Mock<IModelInitializer>(MockBehavior.Strict);
 			mockModelExecuter = new Mock<IModelExecuter>(MockBehavior.Strict);
 			mockModelBreeder = new Mock<IModelBreeder>(MockBehavior.Strict);
 			population = new List<FullyConnectedNeuralNetworkModel>();
 
-			sut = new GeneticLearner(populationSize, selectionSize, random, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object);
+			sut = new GeneticLearner(populationSize, selectionSize, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object, random);
 
-			mockModelInitializer.Setup(m => m.CreateModel(It.Is<int[]>(it => it != null && activationCountsPerLayer.SequenceEqual(it)), activationFunction, random))
+			mockModelInitializer.Setup(m => m.CreateModel(It.Is<int[]>(it => it != null && activationCountsPerLayer.SequenceEqual(it)), activationFunction))
 				.Returns(() =>
 				{
 					var model = CreateFullyConnectedNeuralNetworkModel();

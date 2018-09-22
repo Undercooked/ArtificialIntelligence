@@ -1,6 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using ArtificialIntelligence.Models;
+using ArtificialIntelligence.RandomNumberServices;
 
 namespace ArtificialIntelligence.Genetic
 {
@@ -10,9 +10,9 @@ namespace ArtificialIntelligence.Genetic
 		private const double fractionOfChromosomeToMutate = 0.01;
 
 		private readonly IModelInitializer modelInitializer;
-		private readonly Random random;
+		private readonly ThreadSafeRandom random;
 
-		public GeneticModelBreeder(IModelInitializer modelInitializer, Random random)
+		public GeneticModelBreeder(IModelInitializer modelInitializer, ThreadSafeRandom random)
 		{
 			this.modelInitializer = modelInitializer;
 			this.random = random;
@@ -81,9 +81,9 @@ namespace ArtificialIntelligence.Genetic
 
 		private double SelectDna(double motherDna, double fatherDna)
 		{
-			var geneticDice = random.NextDouble();
+			var geneticDice = random.Next(2);
 
-			return geneticDice < 0.5 ? motherDna : fatherDna;
+			return geneticDice == 0 ? motherDna : fatherDna;
 		}
 
 		private void Mutate(FullyConnectedNeuralNetworkModel model)

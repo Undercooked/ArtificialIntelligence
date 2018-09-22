@@ -10,7 +10,7 @@ namespace ArtificailIntelligence.Experiments
 {
 	internal class MnistDataSource : IDataSource
 	{
-		private const string mnistDataFolder = @"..\..\..\MNIST";
+		private const string mnistDataFolder = @"..\..\..\..\MNIST";
 		private const string trainingDataPrefix = "training";
 		private const string testDataPrefix = "test";
 
