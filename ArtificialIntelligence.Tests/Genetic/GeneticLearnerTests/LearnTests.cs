@@ -63,7 +63,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 				.Returns(new[] { batch[1].Outputs });
 
 			mockModelBreeder.Setup(m => m.Breed(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), It.Is<FullyConnectedNeuralNetworkModel>(it => !it.Equals(population[1]) && population.Contains(it))))
-				.Returns(new FullyConnectedNeuralNetworkModel());
+				.Returns(CreateFullyConnectedNeuralNetworkModel);
 
 			sut.Initialize(model);
 			population.Add(model);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using ArtificialIntelligence.Enums;
 using ArtificialIntelligence.Genetic;
@@ -15,6 +16,9 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 	{
 		private const int populationSize = 10;
 		private const int selectionSize = 4;
+		private static readonly int[] activationCountsPerLayer = new[] { 4, 3 };
+		private static readonly ActivationFunction activationFunction = ActivationFunction.Sigmoid;
+
 		private Mock<IModelInitializer> mockModelInitializer;
 		private Mock<IModelExecuter> mockModelExecuter;
 		private Mock<IModelBreeder> mockModelBreeder;
@@ -41,7 +45,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			Expression<Func<IModelInitializer, FullyConnectedNeuralNetworkModel>> createModelFunction = m => m.CreateModel(activationCountsPerLayer, model.ActivationFunction);
 
 			mockModelInitializer.Setup(createModelFunction)
-				.Returns(new FullyConnectedNeuralNetworkModel());
+				.Returns(CreateFullyConnectedNeuralNetworkModel);
 
 			// Act
 			sut.Initialize(model);
@@ -55,23 +59,35 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		{
 			return new FullyConnectedNeuralNetworkModel
 			{
-				ActivationCountsPerLayer = new[] { 4, 3 },
-				ActivationFunction = ActivationFunction.Sigmoid,
-				BiasLayers = new[]
-				{
-					new[] { -0.84167747099030643, 0.66957177392652811, 0.78872177740033789 }
-				},
-				WeightLayers = new[]
-				{
-					new[,]
-					{
-						{ -0.554521067791861, 0.370098950979346, -0.79384722830441179 },
-						{ 0.60650056395982421, -0.95214650032676129, 0.67987006608390721 },
-						{ -0.35679294977187781, -0.81505192248851621, 0.14074044914019312 },
-						{ 0.60933753829884219, 0.11109885252597684, -0.59281794335358673 }
-					}
-				}
+				ActivationCountsPerLayer = activationCountsPerLayer,
+				ActivationFunction = activationFunction,
+				BiasLayers = activationCountsPerLayer.Skip(1)
+					.Select(l => CreateAndInitializeDoubleArray(l, random.NextDouble)).ToArray(),
+				WeightLayers = activationCountsPerLayer.Skip(1)
+					.Select((l, i) => CreateAndInitializeTwoDimentionalDoubleArray(activationCountsPerLayer[i], l, random.NextDouble)).ToArray()
 			};
+		}
+
+		private double[] CreateAndInitializeDoubleArray(int count, Func<double> elementInitializer)
+		{
+			var array = new double[count];
+
+			return array.Select(d => random.NextDouble()).ToArray();
+		}
+
+		private double[,] CreateAndInitializeTwoDimentionalDoubleArray(int width, int height, Func<double> elementInitializer)
+		{
+			var twoDimensionalArray = new double[width, height];
+
+			for (var x = 0; x < width; x++)
+			{
+				for (var y = 0; y < height; y++)
+				{
+					twoDimensionalArray[x, y] = elementInitializer();
+				}
+			}
+
+			return twoDimensionalArray;
 		}
 	}
 }
