@@ -24,7 +24,7 @@ namespace ArtificailIntelligence.Experiments
 				{
 					var score = experiment.GetModelScore();
 
-					logger.Info($"{experiment.Title} - iteration {i}: {score}");
+					logger.Info($"{experiment.Title} - iteration {i} | Score: {score}");
 
 					experiment.TrainModel();
 				}

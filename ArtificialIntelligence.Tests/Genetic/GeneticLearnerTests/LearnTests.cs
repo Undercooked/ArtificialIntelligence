@@ -22,7 +22,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		private ThreadSafeRandom random;
 		private Mock<IModelInitializer> mockModelInitializer;
 		private Mock<IModelExecuter> mockModelExecuter;
-		private Mock<IModelBreeder> mockModelBreeder;
+		private Mock<IPopulationBreeder> mockPopulationBreeder;
 		private List<FullyConnectedNeuralNetworkModel> population;
 		private GeneticLearner sut;
 
@@ -32,10 +32,10 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			random = new ThreadSafeRandom();
 			mockModelInitializer = new Mock<IModelInitializer>(MockBehavior.Strict);
 			mockModelExecuter = new Mock<IModelExecuter>(MockBehavior.Strict);
-			mockModelBreeder = new Mock<IModelBreeder>(MockBehavior.Strict);
+			mockPopulationBreeder = new Mock<IPopulationBreeder>(MockBehavior.Strict);
 			population = new List<FullyConnectedNeuralNetworkModel>();
 
-			sut = new GeneticLearner(populationSize, selectionSize, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object, random);
+			sut = new GeneticLearner(populationSize, selectionSize, mockModelInitializer.Object, mockModelExecuter.Object, mockPopulationBreeder.Object, random);
 
 			mockModelInitializer.Setup(m => m.CreateModel(It.Is<int[]>(it => it != null && activationCountsPerLayer.SequenceEqual(it)), activationFunction))
 				.Returns(() =>
@@ -62,8 +62,8 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			mockModelExecuter.Setup(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[1].Inputs))
 				.Returns(new[] { batch[1].Outputs });
 
-			mockModelBreeder.Setup(m => m.Breed(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), It.Is<FullyConnectedNeuralNetworkModel>(it => !it.Equals(population[1]) && population.Contains(it))))
-				.Returns(CreateFullyConnectedNeuralNetworkModel);
+			mockPopulationBreeder.Setup(m => m.CreateNextGeneration(It.Is<FullyConnectedNeuralNetworkModel[]>(it => it.Length == 2), populationSize))
+				.Returns(() => CreateManyFullyConnectedNeuralNetworkModel(populationSize - selectionSize));
 
 			sut.Initialize(model);
 			population.Add(model);
@@ -75,8 +75,20 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 			mockModelExecuter.Verify(m => m.Execute(It.IsAny<FullyConnectedNeuralNetworkModel>(), It.IsAny<double[]>()), Times.Exactly(6));
 			mockModelExecuter.Verify(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[0].Inputs), Times.Once);
 			mockModelExecuter.Verify(m => m.Execute(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), batch[1].Inputs), Times.Once);
-			mockModelBreeder.Verify(m => m.Breed(It.Is<FullyConnectedNeuralNetworkModel>(it => it.Equals(population[1])), It.Is<FullyConnectedNeuralNetworkModel>(it => !it.Equals(population[1]) && population.Contains(it))), Times.Once);
+			mockPopulationBreeder.Verify(m => m.CreateNextGeneration(It.Is<FullyConnectedNeuralNetworkModel[]>(it => it.Length == 2), populationSize), Times.Once);
 			sut.Model.Should().BeSameAs(population[1]);
+		}
+
+		private FullyConnectedNeuralNetworkModel[] CreateManyFullyConnectedNeuralNetworkModel(int count)
+		{
+			var models = new FullyConnectedNeuralNetworkModel[count];
+
+			for (var i = 0; i < count; i++)
+			{
+				models[i] = CreateFullyConnectedNeuralNetworkModel();
+			}
+
+			return models;
 		}
 
 		private FullyConnectedNeuralNetworkModel CreateFullyConnectedNeuralNetworkModel()

@@ -21,7 +21,7 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 
 		private Mock<IModelInitializer> mockModelInitializer;
 		private Mock<IModelExecuter> mockModelExecuter;
-		private Mock<IModelBreeder> mockModelBreeder;
+		private Mock<IPopulationBreeder> mockPopulationBreeder;
 		private ThreadSafeRandom random;
 		private GeneticLearner sut;
 
@@ -30,10 +30,10 @@ namespace ArtificialIntelligence.Tests.Genetic.GeneticLearnerTests
 		{
 			mockModelInitializer = new Mock<IModelInitializer>(MockBehavior.Strict);
 			mockModelExecuter = new Mock<IModelExecuter>(MockBehavior.Strict);
-			mockModelBreeder = new Mock<IModelBreeder>(MockBehavior.Strict);
+			mockPopulationBreeder = new Mock<IPopulationBreeder>(MockBehavior.Strict);
 			random = new ThreadSafeRandom();
 
-			sut = new GeneticLearner(populationSize, selectionSize, mockModelInitializer.Object, mockModelExecuter.Object, mockModelBreeder.Object, random);
+			sut = new GeneticLearner(populationSize, selectionSize, mockModelInitializer.Object, mockModelExecuter.Object, mockPopulationBreeder.Object, random);
 		}
 
 		[TestMethod]

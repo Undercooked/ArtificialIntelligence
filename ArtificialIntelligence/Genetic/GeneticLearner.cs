@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArtificialIntelligence.Models;
 using ArtificialIntelligence.RandomNumberServices;
@@ -17,7 +18,7 @@ namespace ArtificialIntelligence.Genetic
 		private readonly int selectionSize;
 		private readonly IModelInitializer modelInitializer;
 		private readonly IModelExecuter modelExecuter;
-		private readonly IModelBreeder modelBreeder;
+		private readonly IPopulationBreeder populationBreeder;
 		private readonly object[] populationCostLocks;
 		private readonly ThreadSafeRandom random;
 
@@ -26,13 +27,13 @@ namespace ArtificialIntelligence.Genetic
 
 		public FullyConnectedNeuralNetworkModel Model => population[0].Model;
 
-		public GeneticLearner(int populationSize, int selectionSize, IModelInitializer modelInitializer, IModelExecuter modelExecuter, IModelBreeder modelBreeder, ThreadSafeRandom random)
+		public GeneticLearner(int populationSize, int selectionSize, IModelInitializer modelInitializer, IModelExecuter modelExecuter, IPopulationBreeder populationBreeder, ThreadSafeRandom random)
 		{
 			this.populationSize = populationSize;
 			this.selectionSize = selectionSize;
 			this.modelInitializer = modelInitializer;
 			this.modelExecuter = modelExecuter;
-			this.modelBreeder = modelBreeder;
+			this.populationBreeder = populationBreeder;
 			this.random = random;
 			populationCostLocks = new object[populationSize].Select(o => new object()).ToArray();
 			population = new CostModel<FullyConnectedNeuralNetworkModel>[populationSize];
@@ -47,25 +48,44 @@ namespace ArtificialIntelligence.Genetic
 				var member = modelInitializer.CreateModel(model.ActivationCountsPerLayer, model.ActivationFunction);
 				population[populationIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(member);
 			}
-
-			CalculateDiversity();
 		}
 
 		public void Learn(InputOutputPairModel[] batch)
 		{
-			Parallel.ForEach(batch, inputOutputPair =>
-			{
-				CalculateCostForPopulation(inputOutputPair);
-			});
-
+			ReportDiversity();
+			CalculatePopulationCostsForBatch(batch);
 			SortPopulation();
+			ReportCosts();
 			CreateNextGeneration();
-			CalculateDiversity();
 
 			isFirstLearningIteration = false;
 		}
 
-		private void CalculateCostForPopulation(InputOutputPairModel inputOutputPair)
+		private void CalculatePopulationCostsForBatch(IEnumerable<InputOutputPairModel> batch)
+		{
+			var completed = 0;
+			var batchCount = batch.Count();
+
+			using (var progressReporter = new Timer(t =>
+			{
+				var progress = (double)completed / batchCount * 100;
+
+				Console.SetCursorPosition(0, Console.CursorTop);
+				Console.Write($"Population cost calculation progress: {progress.ToString("0.0")}%");
+			}, null, 0, 1000))
+			{
+				Parallel.ForEach(batch, inputOutputPair =>
+				{
+					CalculatePopulationCostsForInputOutputPair(inputOutputPair);
+					Interlocked.Increment(ref completed);
+				});
+			}
+
+			Console.SetCursorPosition(0, Console.CursorTop);
+			Console.WriteLine($"Population cost calculation progress: 100.0%");
+		}
+
+		private void CalculatePopulationCostsForInputOutputPair(InputOutputPairModel inputOutputPair)
 		{
 			var individualIndex = isFirstLearningIteration ? 0 : selectionSize;
 
@@ -102,41 +122,15 @@ namespace ArtificialIntelligence.Genetic
 			Array.Sort(population, (x, y) => x.Cost.CompareTo(y.Cost));
 		}
 
-		public void CreateNextGeneration()
+		private void CreateNextGeneration()
 		{
-			var parents = SelectSurvivors();
-			var indexesBred = new ConcurrentDictionary<int, List<int>>();
+			var parentCostModels = SelectSurvivors();
+			var parentModels = parentCostModels.Select(p => p.Model).ToArray();
+			var childModels = populationBreeder.CreateNextGeneration(parentModels, populationSize);
+			var childCostModels = childModels.Select(c => new CostModel<FullyConnectedNeuralNetworkModel>(c)).ToArray();
 
-			Parallel.For(parents.Length, population.Length, childIndex =>
-			{
-				var motherIndex = 0;
-				var fatherIndex = 0;
-				var motherHasChildren = false;
-
-				while (motherIndex == fatherIndex || motherHasChildren && indexesBred[motherIndex].Contains(fatherIndex))
-				{
-					var parentIndexes = new[] { random.Next(selectionSize), random.Next(selectionSize) }.OrderBy(i => i);
-
-					motherIndex = parentIndexes.ElementAt(0);
-					fatherIndex = parentIndexes.ElementAt(1);
-					motherHasChildren = indexesBred.ContainsKey(motherIndex);
-				}
-
-				var mother = parents[motherIndex].Model;
-				var father = parents[fatherIndex].Model;
-				var child = modelBreeder.Breed(mother, father);
-
-				population[childIndex] = new CostModel<FullyConnectedNeuralNetworkModel>(child);
-
-				indexesBred.AddOrUpdate(motherIndex, new List<int>() { fatherIndex }, (key, value) =>
-				{
-					value.Add(fatherIndex);
-
-					return value;
-				});
-			});
-
-			Array.Copy(parents, population, parents.Length);
+			Array.Copy(parentCostModels, population, parentCostModels.Length);
+			Array.Copy(childCostModels, 0, population, parentCostModels.Length, childCostModels.Length);
 		}
 
 		private CostModel<FullyConnectedNeuralNetworkModel>[] SelectSurvivors()
@@ -177,7 +171,14 @@ namespace ArtificialIntelligence.Genetic
 			return uniqueRandomIntegers;
 		}
 
-		private void CalculateDiversity()
+		private void ReportCosts()
+		{
+			var populationCostsString = string.Join(", ", population.Select(p => p.Cost.ToString("0.000")));
+
+			logger.Info($"Population cost: {populationCostsString}");
+		}
+
+		private void ReportDiversity()
 		{
 			var totalDistance = 0.0;
 			var totalDistanceLock = new object();
@@ -206,7 +207,7 @@ namespace ArtificialIntelligence.Genetic
 			var numberOfDistances = (Math.Pow(populationSize, 2) - populationSize) / 2;
 			var averageDistance = totalDistance / numberOfDistances;
 
-			logger.Info($"Average distance: {averageDistance} | Total distance: {totalDistance}");
+			logger.Info($"Average diversity: {averageDistance} | Total diversity: {totalDistance}");
 		}
 
 		private double EuclideanDistance(double[] q, double[] p)
